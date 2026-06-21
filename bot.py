@@ -144,9 +144,16 @@ async def process_admin_done(callback: types.CallbackQuery):
     except Exception as e:
         await callback.answer("❌ Mijozga xabar yuborib bo'lmadi.")
 
+async def main():import os
+
 async def main():
+    # Render uchun portni tinglash
+    port = int(os.environ.get("PORT", 10000))
+    server = await asyncio.start_server(lambda r, w: None, '0.0.0.0', port)
+
+    # Botni ishga tushirish
     await dp.start_polling(bot)
 
 if __name__ == '__main__':
     asyncio.run(main())
-  
+    
