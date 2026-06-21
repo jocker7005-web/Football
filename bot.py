@@ -1,3 +1,4 @@
+import os
 import logging
 import asyncio
 from aiogram import Bot, Dispatcher, types, F
@@ -7,16 +8,15 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 
-# Bot sozlamalari
-API_TOKEN = '8956019896:AAEaJfsOR4d59fEIwAQnrtyL_wOp01lIU6c'
-ADMIN_ID = 1678146043  # Sizning shaxsiy Telegram ID raqamingiz
-order_counter = 0  # Arizalarni raqamlash uchun hisoblagich
+# YANGI TOZA TOKENINGIZ SHU YERGA QO'YILDI
+API_TOKEN = '8893476065:AAHthRYT2HV-NEWwe7DnT-PSY6C_uL5S-ak'
+ADMIN_ID = 1678146043  
+order_counter = 0  
 
 logging.basicConfig(level=logging.INFO)
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
 
-# Sotuvdagi paketlar va narxlar
 COIN_PACKS = {
     "130_coin": {"name": "🪙 130 eFootball Coin", "price": "15,000 so'm"},
     "550_coin": {"name": "🪙 550 eFootball Coin", "price": "55,000 so'm"},
@@ -24,17 +24,14 @@ COIN_PACKS = {
     "2150_coin": {"name": "🪙 2150 eFootball Coin", "price": "190,000 so'm"}
 }
 
-# Sizning hamyon ma'lumotlaringiz
 CARD_INFO = "💳 Karta raqam: `9860 3501 0897 5409`\n👤 Ega: XUSANOVA MAQSUDA"
 
-# FSM (Savol-javob bosqichlari)
 class OrderState(StatesGroup):
     choosing_pack = State()
     entering_id = State()
     entering_password = State()
     sending_receipt = State()
 
-# Bosh menyu tugmalari
 def get_main_keyboard():
     return ReplyKeyboardMarkup(keyboard=[
         [KeyboardButton(text="🪙 Coin sotib olish"), KeyboardButton(text="📊 Narxlar va Paketlar")],
@@ -98,7 +95,6 @@ async def receipt_sent(message: types.Message, state: FSMContext):
     user_data = await state.get_data()
     photo_id = message.photo[-1].file_id
     
-    # Adminga (Sizga) inline tugmali buyurtma yuborish
     admin_markup = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="✅ Coin tashladim", callback_data=f"done_{message.from_user.id}_{order_counter}")]
     ])
@@ -115,7 +111,7 @@ async def receipt_sent(message: types.Message, state: FSMContext):
     try:
         await bot.send_photo(chat_id=ADMIN_ID, photo=photo_id, caption=admin_text, reply_markup=admin_markup, parse_mode="Markdown")
     except Exception as e:
-        logging.error(f"Adminga xabar yuborishda xato: {e}")
+        logging.error(f"Xato: {e}")
 
     await message.answer(
         f"✅ Arizangiz muvaffaqiyatli qabul qilindi!\n"
@@ -128,14 +124,11 @@ async def receipt_sent(message: types.Message, state: FSMContext):
 @dp.callback_query(F.data.startswith("done_"))
 async def process_admin_done(callback: types.CallbackQuery):
     _, user_id, order_id = callback.data.split("_")
-    
     try:
-        # Mijozga avtomatik javob borishi
         await bot.send_message(
             chat_id=int(user_id),
             text=f"🎉 **Xushxabar!**\nSizning **#{order_id}** raqamli buyurtmangiz muvaffaqiyatli bajarildi. eFootball coinlaringiz o'yin hisobingizga tushirildi! ✅"
         )
-        # Admindagi xabarni o'zgartirish (tugma yo'qoladi, status o'zgaradi)
         await callback.message.edit_caption(
             caption=callback.message.caption + "\n\n🟢 **BAJARILDI!** (Mijozga xabar yuborildi)",
             reply_markup=None,
@@ -144,14 +137,12 @@ async def process_admin_done(callback: types.CallbackQuery):
     except Exception as e:
         await callback.answer("❌ Mijozga xabar yuborib bo'lmadi.")
 
-async def main():import os
-
 async def main():
-    # Render uchun portni tinglash
+    # Render port cheklovidan o'tish uchun soxta server yaratamiz
     port = int(os.environ.get("PORT", 10000))
     server = await asyncio.start_server(lambda r, w: None, '0.0.0.0', port)
-
-    # Botni ishga tushirish
+    
+    # Botni ishga tushiramiz
     await dp.start_polling(bot)
 
 if __name__ == '__main__':
