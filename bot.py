@@ -54,14 +54,13 @@ LOGIN_PACKS = {
     "a_12800": {"name": "🪙 12.800 coin (Kirib)", "price": "1.190.000 so'm", "cashback": 55}
 }
 CARD_INFO = "💳 Karta raqam: `9860 3501 0897 5409`\n👤 Ega: XUSANOVA MAQSUDA"
-
 class OrderState(StatesGroup):
     choosing_method = State()
     choosing_pack = State()
     entering_id = State()
     entering_password = State()
     sending_receipt = State()
-    class WithdrawState(StatesGroup):
+class WithdrawState(StatesGroup):
     entering_id = State()
     entering_password = State()
 
