@@ -10,7 +10,8 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 
 # Bot sozlamalari
-API_TOKEN ='8956019896:AAHvJf3k4t6oqME43ya0kTw7P4TEAA7d_XI'
+API_TOKEN = '8893476065:AAEcYyKoFzFev4t66E6YeX7HolTDhv2oFhc'
+
 
 ADMIN_ID = 1678146043  
 PROOF_CHAT_ID = -1002220302390  
