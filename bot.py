@@ -9,12 +9,11 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 
-# Bot sozlamalari (Amvera xavfsizlik filtri uchun token yashirildi)
+# Bot sozlamalari (Amvera filtri uchun token yashirildi)
 API_TOKEN = os.environ.get("BOT_TOKEN", "8893476065:AAFseE8gnPCvfV_GALln-PCvK-tz7Wihn40")
 ADMIN_ID = 1678146043  
 PROOF_CHAT_ID = -1002220302390  
 
-# DO'KONINGIZ UCHUN CHIROYLI RASMLAR (BANNERLAR)
 MENU_PHOTO = "https://unsplash.com" 
 COIN_PHOTO = "https://unsplash.com" 
 
@@ -26,7 +25,7 @@ logging.basicConfig(level=logging.INFO)
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
 
-# 📥 ID ORQALI YUKLASH NARXLARI
+# ID ORQALI YUKLASH NARXLARI
 DIRECT_PACKS = {
     "d_578": {"name": "🪙 578 coins (ID orqali)", "price": "70.000 so'm", "cashback": 5},
     "d_788": {"name": "🪙 788 coins (ID orqali)", "price": "100.000 so'm", "cashback": 7},
@@ -39,8 +38,7 @@ DIRECT_PACKS = {
     "d_13440": {"name": "🪙 13440 coins (ID orqali)", "price": "1.250.000 so'm", "cashback": 55},
     "d_32200": {"name": "🪙 32200 coins (ID orqali)", "price": "2.800.000 so'm", "cashback": 100}
 }
-
-# 📱 AKKOUNTGA KIRIB YUKLASH NARXLARI
+# AKKOUNTGA KIRIB YUKLASH NARXLARI
 LOGIN_PACKS = {
     "a_260": {"name": "🪙 260 coins (Kirib)", "price": "40.000 so'm", "cashback": 2},
     "a_300": {"name": "🪙 300 coins (Kirib)", "price": "45.000 so'm", "cashback": 3},
@@ -86,39 +84,22 @@ def get_main_keyboard():
 
 def is_work_time():
     current_hour = datetime.now().hour
-    if 1 <= current_hour < 8:
-        return False
+    if 1 <= current_hour < 8: return False
     return True
-
-@dp.message(Command("start"))
+    @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
     uid = message.from_user.id
     total_users.add(uid)
-    if uid not in user_bonuses:
-        user_bonuses[uid] = 0  
-    
-    welcome_text = (
-        f"👋 **Assalomu alaykum, {message.from_user.full_name}!**\n\n"
-        "🔥 **eFootball Coin** sotuvchi rasmiy botga xush kelibsiz!\n"
-        "👇 Boshlash uchun quyidagi menyudan bo'limni tanlang:"
-    )
-    try:
-        await bot.send_photo(chat_id=message.chat.id, photo=MENU_PHOTO, caption=welcome_text, reply_markup=get_main_keyboard(), parse_mode="Markdown")
-    except:
-        await message.answer(welcome_text, reply_markup=get_main_keyboard(), parse_mode="Markdown")
+    if uid not in user_bonuses: user_bonuses[uid] = 0  
+    welcome_text = "👋 **Assalomu alaykum!**\n\n🔥 eFootball Coin sotuvchi rasmiy botga xush kelibsiz!\n👇 Bo'limni tanlang:"
+    try: await bot.send_photo(chat_id=message.chat.id, photo=MENU_PHOTO, caption=welcome_text, reply_markup=get_main_keyboard(), parse_mode="Markdown")
+    except: await message.answer(welcome_text, reply_markup=get_main_keyboard(), parse_mode="Markdown")
 
 @dp.message(Command("panel"))
 async def admin_panel(message: types.Message):
     if message.from_user.id == ADMIN_ID:
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="📢 Reklama tarqatish", callback_data="admin_broadcast")]
-        ])
-        await message.answer(
-            "⚙️ **ADMIN PANEL**\n\n"
-            f"👥 Jami a'zolar: **{len(total_users)} ta**\n"
-            f"📦 Jami buyurtmalar: **{order_counter} ta**",
-            reply_markup=keyboard
-        )
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="📢 Reklama tarqatish", callback_data="admin_broadcast")]])
+        await message.answer(f"⚙️ **ADMIN PANEL**\n\n👥 Jami a'zolar: {len(total_users)} ta\n📦 Jami buyurtmalar: {order_counter} ta", reply_markup=keyboard)
 
 @dp.callback_query(F.data == "admin_broadcast")
 async def start_broadcast(callback: types.CallbackQuery, state: FSMContext):
@@ -132,23 +113,17 @@ async def process_broadcast(message: types.Message, state: FSMContext):
     count = 0
     for uid in total_users:
         try:
-            if message.photo:
-                await bot.send_photo(chat_id=uid, photo=message.photo[-1].file_id, caption=message.caption)
-            else:
-                await bot.send_message(chat_id=uid, text=message.text)
+            if message.photo: await bot.send_photo(chat_id=uid, photo=message.photo[-1].file_id, caption=message.caption)
+            else: await bot.send_message(chat_id=uid, text=message.text)
             count += 1
-        except:
-            pass
+        except: pass
     await message.answer(f"✅ Reklama yakunlandi: **{count} ta** odamga bordi.")
     await state.clear()
 
 @dp.message(F.text == "💰 Mening Bonuslarim")
 async def show_bonus(message: types.Message):
     bonus = user_bonuses.get(message.from_user.id, 0)
-    await message.answer(
-        f"💰 **Sizning hamyoningiz:**\n\nSizda hozir: ✨ **{bonus} ta bonus Coin** bor.\n\n"
-        f"⚠️ *Balansingiz 550 coinga yetganda uni tekinga o'yin hisobingizga chiqarib olishingiz mumkin!*"
-    )
+    await message.answer(f"💰 **Sizning hamyoningiz:**\n\nSizda hozir: ✨ **{bonus} ta bonus Coin** bor.\n\n⚠️ *Balansingiz 550 coinga yetganda uni tekinga o'yin hisobingizga chiqarib olishingiz mumkin!*")
 
 @dp.message(F.text == "🎁 Bepul Coin yechish")
 async def withdraw_bonus(message: types.Message, state: FSMContext):
@@ -156,8 +131,7 @@ async def withdraw_bonus(message: types.Message, state: FSMContext):
         await message.answer("🕒 **Do'konimiz yopiq!**\nIsh vaqti: 08:00 dan 01:00 gacha.")
         return
     bonus = user_bonuses.get(message.from_user.id, 0)
-    if bonus < 550:
-        await message.answer(f"❌ **Bonuslar yetarli emas!**\nSizda hozir: **{bonus} coin** bor.\nMinimal yechish: **550 coin**.")
+    if bonus < 550: await message.answer(f"❌ **Bonuslar yetarli emas!**\nSizda hozir: **{bonus} coin** bor.\nMinimal yechish: **550 coin**.")
     else:
         await message.answer("🎁 **Bonuslaringiz etarli.**\n\n📧 Konami ID (Email) kiriting:")
         await state.set_state(WithdrawState.entering_id)
@@ -178,34 +152,113 @@ async def withdraw_pass(message: types.Message, state: FSMContext):
     uid = message.from_user.id
     user_data = await state.get_data()
     user_bonuses[uid] -= 550  
-    
-    admin_markup = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="✅ Bonus Coin tashladim", callback_data=f"done_{uid}_{order_counter}"),
-         InlineKeyboardButton(text="❌ Rad etish", callback_data=f"reject_{uid}_{order_counter}")]
-    ])
-    admin_text = (
-        f"🎁 **TEKIN COIN YECHISH!**\n🆔 **Buyurtma raqami:** #{order_counter}\n"
-        f"👤 **Mijoz:** @{message.from_user.username or 'Yashirin'}\n\n"
-        f"🔥 **Miqdor:** 550 Tekin Coin\n📧 **Konami ID:** `{user_data['konami_id']}`\n🔑 **Parol:** `{message.text}`"
-    )
+    admin_markup = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="✅ Bonus Coin tashladim", callback_data=f"done_{uid}_{order_counter}"), InlineKeyboardButton(text="❌ Rad etish", callback_data=f"reject_{uid}_{order_counter}")]])
+    admin_text = f"🎁 **TEKIN COIN YECHISH!**\n🆔 **Buyurtma raqami:** #{order_counter}\n👤 **Mijoz:** @{message.from_user.username or 'Yashirin'}\n🔥 **Miqdor:** 550 Tekin Coin\n📧 **Konami ID:** `{user_data['konami_id']}`\n🔑 **Parol:** `{message.text}`"
     await bot.send_message(chat_id=ADMIN_ID, text=admin_text, reply_markup=admin_markup, parse_mode="Markdown")
     await message.answer(f"✅ **Arizangiz yuborildi!**\nBuyurtma raqamingiz: **#{order_counter}**", reply_markup=get_main_keyboard())
     await state.clear()
 
 @dp.message(F.text == "📊 Narxlar va Paketlar")
 async def show_prices(message: types.Message):
-    text = "📋 ✨ **Mavjud ultra arzon paketlar va narxlar:**\n\n📥 **ID orqali (Kirmasdan yuklash ⚡️):**\n"
-    for pack in DIRECT_PACKS.values():
-        text += f"▪️ {pack['name']} — `{pack['price']}` (+{pack['cashback']} bonus)\n"
-    text += "\n📱 **Akkountga kirib yuklash (Android & iOS 🔑):**\n"
-    for pack in LOGIN_PACKS.values():
-        text += f"▪️ {pack['name']} — `{pack['price']}` (+{pack['cashback']} bonus)\n"
+    text = "📋 ✨ **Mavjud ultra arzon paketlar:**\n\n📥 **ID orqali:**\n"
+    for pack in DIRECT_PACKS.values(): text += f"▪️ {pack['name']} — `{pack['price']}` (+{pack['cashback']} bonus)\n"
+    text += "\n📱 **Akkountga kirib:**\n"
+    for pack in LOGIN_PACKS.values(): text += f"▪️ {pack['name']} — `{pack['price']}` (+{pack['cashback']} bonus)\n"
     await message.answer(text, parse_mode="Markdown")
 
 @dp.message(F.text == "ℹ️ Qo'llanma / Qoidalar")
-async def show_guide(message: types.Message):
-    await message.answer("ℹ️ 🕒 **Ish vaqti:** 08:00 dan 01:00 gacha.\n\nCard raqamga pul o'tkazib chek yuboring.")
-
+async def show_guide(message: types.Message): await message.answer("ℹ️ Card raqamga pul o'tkazib chek yuboring.")
 @dp.message(F.text == "⭐️ Sharhlar")
-async def show_reviews(message: types.Message):
+async def show_reviews(message: types.Message): await message.answer("⭐️ Isbotlar guruhimiz:\nhttps://t.me")
+@dp.message(F.text == "👨‍💻 Aloqa / Admin")
+async def show_contact(message: types.Message): await message.answer("👨‍💻 Admin: @Jocker_7005")
+
+@dp.message(F.text == "🪙 Coin sotib olish")
+async def start_order(message: types.Message, state: FSMContext):
+    if not is_work_time():
+        await message.answer("🕒 **Do'konimiz yopiq!**\nIsh vaqti: 08:00 dan 01:00 gacha.")
+        return
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="📥 ID orqali", callback_data="method_direct"), InlineKeyboardButton(text="📱 Kirib yuklash", callback_data="method_login")]])
+    try: await bot.send_photo(chat_id=message.chat.id, photo=COIN_PHOTO, caption="✨ Usulni tanlang:", reply_markup=keyboard)
+    except: await message.answer("✨ Usulni tanlang:", reply_markup=keyboard)
+    await state.set_state(OrderState.choosing_method)
+
+@dp.callback_query(F.data.startswith("method_"), OrderState.choosing_method)
+async def method_chosen(callback: types.CallbackQuery, state: FSMContext):
+    method = callback.data.split("_")
+    await state.update_data(method=method)
+    packs = DIRECT_PACKS if method == "direct" else LOGIN_PACKS
+    buttons = [[InlineKeyboardButton(text=f"{v['name']}", callback_data=k)] for k, v in packs.items()]
+    await callback.message.answer("👇 **Coin miqdorini tanlang:**", reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons))
+    await callback.message.delete()
+    await state.set_state(OrderState.choosing_pack)
+
+@dp.callback_query(OrderState.choosing_pack)
+async def pack_chosen(callback: types.CallbackQuery, state: FSMContext):
+    user_data = await state.get_data()
+    packs = DIRECT_PACKS if user_data['method'] == "direct" else LOGIN_PACKS
+    await state.update_data(pack_key=callback.data, pack_name=packs[callback.data]['name'])
+    await callback.message.delete()
+    await callback.message.answer("📧 **Konami ID (Email) kiriting:**")
+    await state.set_state(OrderState.entering_id)
+
+@dp.message(OrderState.entering_id)
+async def id_entered(message: types.Message, state: FSMContext):
+    await state.update_data(konami_id=message.text)
+    await message.answer("🔑 **Konami parolingizni kiriting:**")
+    await state.set_state(OrderState.entering_password)
+
+@dp.message(OrderState.entering_password)
+async def password_entered(message: types.Message, state: FSMContext):
+    await state.update_data(password=message.text)
+    await message.answer(f"💵 **To'lovni qiling va chek rasmini yuklang:**\n\n{CARD_INFO}", parse_mode="Markdown")
+    await state.set_state(OrderState.sending_receipt)
+
+@dp.message(OrderState.sending_receipt, F.photo)
+async def receipt_sent(message: types.Message, state: FSMContext):
+    global order_counter
+    order_counter += 1
+    uid = message.from_user.id
+    user_data = await state.get_data()
+    packs = DIRECT_PACKS if user_data['method'] == "direct" else LOGIN_PACKS
+    added_bonus = packs[user_data['pack_key']]['cashback']
+    user_bonuses[uid] = user_bonuses.get(uid, 0) + added_bonus
+    admin_markup = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="✅ Tasdiqlash", callback_data=f"done_{uid}_{order_counter}"), InlineKeyboardButton(text="❌ Rad etish", callback_data=f"reject_{uid}_{order_counter}")]])
+    admin_text = f"🚨 **YANGI BUYURTMA! #{order_counter}**\n👤 Mijoz: @{message.from_user.username or 'Yashirin'}\n📦 Paket: {user_data['pack_name']}\n📧 ID: `{user_data['konami_id']}`\n🔑 Parol: `{user_data['password']}`"
+    await bot.send_photo(chat_id=ADMIN_ID, photo=message.photo[-1].file_id, caption=admin_text, reply_markup=admin_markup, parse_mode="Markdown")
+    await message.answer(f"✅ **Arizangiz qabul qilindi!**\n#{order_counter}\n✨ +{added_bonus} bonus qo'shildi!", reply_markup=get_main_keyboard())
+    await state.clear()
+
+@dp.callback_query(F.data.startswith("done_"))
+async def process_admin_done(callback: types.CallbackQuery):
+    _, user_id, order_id = callback.data.split("_")
+    try:
+        await bot.send_message(chat_id=int(user_id), text=f"🎉 **Buyurtmangiz #{order_id} bajarildi!** ✅")
+        caption_text = f"✅ **MUVAFFAQIYATLI XARID!**\n\n🆔 Buyurtma raqami: #{order_id}\n⭐️ *Bizni tanlaganingiz uchun rahmat!*"
+        if callback.message.photo: await bot.send_photo(chat_id=PROOF_CHAT_ID, photo=callback.message.photo[-1].file_id, caption=caption_text)
+        else: await bot.send_message(chat_id=PROOF_CHAT_ID, text=caption_text)
+        await callback.message.edit_reply_markup(reply_markup=None)
+    except: pass
+
+@dp.callback_query(F.data.startswith("reject_"))
+async def process_admin_reject(callback: types.CallbackQuery, state: FSMContext):
+    _, user_id, order_id = callback.data.split("_")
+    await state.update_data(reject_user_id=user_id, reject_order_id=order_id, reject_msg=callback.message)
+    await callback.message.answer(f"❌ **#{order_id}** rad etish sababini yozing:")
+    await state.set_state(AdminState.waiting_rejection_reason)
+
+@dp.message(AdminState.waiting_rejection_reason)
+async def get_rejection_reason(message: types.Message, state: FSMContext):
+    user_data = await state.get_data()
+    try:
+        await bot.send_message(chat_id=int(user_data['reject_user_id']), text=f"❌ **Buyurtmangiz #{user_data['reject_order_id']} rad etildi!**\n⚠️ Sababi: {message.text}")
+        await user_data['reject_msg'].edit_reply_markup(reply_markup=None)
+    except: pass
+    await state.clear()
+
+async def main():
+    await dp.start_polling(bot)
+
+if __name__ == '__main__':
+    asyncio.run(main())
     
