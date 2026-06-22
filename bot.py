@@ -14,7 +14,6 @@ API_TOKEN = '8956019896:AAHvJf3k4t6oqME43ya0kTw7P4TEAA7d_XI'
 ADMIN_ID = 1678146043  
 PROOF_CHAT_ID = -1002220302390  
 
-# DO'KONINGIZ UCHUN CHIROYLI RASMLAR (BANNERLAR)
 MENU_PHOTO = "https://unsplash.com" 
 COIN_PHOTO = "https://unsplash.com" 
 
@@ -26,7 +25,6 @@ logging.basicConfig(level=logging.INFO)
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
 
-# 📥 ID ORQALI YUKLASH NARXLARI
 DIRECT_PACKS = {
     "d_578": {"name": "🪙 578 coins (ID orqali)", "price": "70.000 so'm", "cashback": 5},
     "d_788": {"name": "🪙 788 coins (ID orqali)", "price": "100.000 so'm", "cashback": 7},
@@ -40,7 +38,6 @@ DIRECT_PACKS = {
     "d_32200": {"name": "🪙 32200 coins (ID orqali)", "price": "2.800.000 so'm", "cashback": 100}
 }
 
-# 📱 AKKOUNTGA KIRIB YUKLASH NARXLARI
 LOGIN_PACKS = {
     "a_260": {"name": "🪙 260 coins (Kirib)", "price": "40.000 so'm", "cashback": 2},
     "a_300": {"name": "🪙 300 coins (Kirib)", "price": "45.000 so'm", "cashback": 3},
@@ -99,9 +96,8 @@ async def cmd_start(message: types.Message):
     
     welcome_text = (
         f"👋 **Assalomu alaykum, {message.from_user.full_name}!**\n\n"
-        "🔥 **eFootball Coin** sotuvchi eng tezkor va ishonchli rasmiy botga xush kelibsiz!\n"
-        "✨ Biz orqali tangalarni eng arzon narxlarda va keshbek bonuslari bilan sotib oling.\n\n"
-        "👇 Boshlash uchun quyidagi menyudan kerakli bo'limni tanlang:"
+        "🔥 **eFootball Coin** sotuvchi rasmmiy botga xush kelibsiz!\n"
+        "👇 Boshlash uchun quyidagi menyudan bo'limni tanlang:"
     )
     try:
         await bot.send_photo(chat_id=message.chat.id, photo=MENU_PHOTO, caption=welcome_text, reply_markup=get_main_keyboard(), parse_mode="Markdown")
@@ -123,7 +119,7 @@ async def admin_panel(message: types.Message):
 
 @dp.callback_query(F.data == "admin_broadcast")
 async def start_broadcast(callback: types.CallbackQuery, state: FSMContext):
-    await callback.message.answer("📢 Reklama xabarini yuboring (Rasm yoki Matn):")
+    await callback.message.answer("📢 Reklama xabarini yuboring:")
     await state.set_state(AdminState.waiting_broadcast_msg)
     await callback.answer()
 
@@ -205,3 +201,11 @@ async def show_prices(message: types.Message):
 
 @dp.message(F.text == "ℹ️ Qo'llanma / Qoidalar")
 async def show_guide(message: types.Message):
+    await message.answer("ℹ️ 🕒 **Ish vaqti:** 08:00 dan 01:00 gacha.\n\nCard raqamga pul o'tkazib chek yuboring.")
+
+@dp.message(F.text == "⭐️ Sharhlar")
+async def show_reviews(message: types.Message):
+    await message.answer("⭐️ **Mijozlarimiz barcha xarid isbotlari guruhimizda:**\nhttps://t.me")
+
+@dp.message(F.text == "👨‍💻 Aloqa / Admin")
+async def show_contact(message: types.Message):
