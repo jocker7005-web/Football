@@ -1,35 +1,47 @@
 import logging
-import asyncio
 import sqlite3
-from aiogram import Bot, Dispatcher, Router
+from aiogram import Bot, Dispatcher, Router, F
+from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters import CommandStart
+import asyncio
 
-# Botni sozlash
+# Token
 BOT_TOKEN = "8893476065:AAFseE8gnPCvfV_GALln-PCvK-tz7Wihn40"
-ADMIN_ID = 1678146043
 
 logging.basicConfig(level=logging.INFO)
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 router = Router()
 
-# Baza yaratish
-def init_db():
-    conn = sqlite3.connect("/data/bot_database.db")
-    cursor = conn.cursor()
-    cursor.execute("CREATE TABLE IF NOT EXISTS users (user_id INTEGER PRIMARY KEY, username TEXT)")
-    conn.commit()
-    conn.close()
+# Asosiy menyu tugmalari
+def get_main_kb():
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🛒 Coins sotib olish", callback_data="buy_menu")],
+        [InlineKeyboardButton(text="🏆 Turnir", callback_data="tour_menu")]
+    ])
+    return kb
 
 # Start komandasi
 @router.message(CommandStart())
-async def cmd_start(message):
-    await message.answer("Assalomu alaykum! Bot ishlamoqda.")
+async def cmd_start(message: Message):
+    await message.answer(
+        "Assalomu alaykum! eFootball botiga xush kelibsiz. Quyidagilardan birini tanlang:", 
+        reply_markup=get_main_kb()
+    )
+
+# Tugmalarni bosganda javob qaytarish
+@router.callback_query(F.data == "buy_menu")
+async def buy_menu(callback: CallbackQuery):
+    await callback.message.edit_text("🛒 Coins bo'limi ochildi (tez orada qo'shamiz).", reply_markup=get_main_kb())
+
+@router.callback_query(F.data == "tour_menu")
+async def tour_menu(callback: CallbackQuery):
+    await callback.message.edit_text("🏆 Turnir bo'limi ochildi (tez orada qo'shamiz).", reply_markup=get_main_kb())
 
 # Botni ishga tushirish
 async def main():
-    init_db()
     dp.include_router(router)
+    print("Bot menyu bilan ishga tushdi...")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
