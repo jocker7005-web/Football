@@ -10,12 +10,13 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 
 # Bot sozlamalari
-API_TOKEN = '8893476065:AAFseE8gnPCvfV_GALln-PCvK-tz7Wihn40'
-
-
-
+API_TOKEN = '8956019896:AAHvJf3k4t6oqME43ya0kTw7P4TEAA7d_XI'
 ADMIN_ID = 1678146043  
 PROOF_CHAT_ID = -1002220302390  
+
+# DO'KONINGIZ UCHUN CHIROYLI RASMLAR (BANNERLAR)
+MENU_PHOTO = "https://unsplash.com" 
+COIN_PHOTO = "https://unsplash.com" 
 
 order_counter = 0
 total_users = set()
@@ -95,11 +96,17 @@ async def cmd_start(message: types.Message):
     total_users.add(uid)
     if uid not in user_bonuses:
         user_bonuses[uid] = 0  
-    await message.answer(
-        f"👋 Assalomu alaykum, {message.from_user.full_name}!\n"
-        "eFootball Coin sotuvchi rasmiy botga xush kelibsiz.",
-        reply_markup=get_main_keyboard()
+    
+    welcome_text = (
+        f"👋 **Assalomu alaykum, {message.from_user.full_name}!**\n\n"
+        "🔥 **eFootball Coin** sotuvchi eng tezkor va ishonchli rasmiy botga xush kelibsiz!\n"
+        "✨ Biz orqali tangalarni eng arzon narxlarda va keshbek bonuslari bilan sotib oling.\n\n"
+        "👇 Boshlash uchun quyidagi menyudan kerakli bo'limni tanlang:"
     )
+    try:
+        await bot.send_photo(chat_id=message.chat.id, photo=MENU_PHOTO, caption=welcome_text, reply_markup=get_main_keyboard(), parse_mode="Markdown")
+    except:
+        await message.answer(welcome_text, reply_markup=get_main_keyboard(), parse_mode="Markdown")
 
 @dp.message(Command("panel"))
 async def admin_panel(message: types.Message):
@@ -116,7 +123,7 @@ async def admin_panel(message: types.Message):
 
 @dp.callback_query(F.data == "admin_broadcast")
 async def start_broadcast(callback: types.CallbackQuery, state: FSMContext):
-    await callback.message.answer("📢 Reklama xabarini yuboring:")
+    await callback.message.answer("📢 Reklama xabarini yuboring (Rasm yoki Matn):")
     await state.set_state(AdminState.waiting_broadcast_msg)
     await callback.answer()
 
@@ -140,7 +147,7 @@ async def process_broadcast(message: types.Message, state: FSMContext):
 async def show_bonus(message: types.Message):
     bonus = user_bonuses.get(message.from_user.id, 0)
     await message.answer(
-        f"💰 **Sizning hamyoningiz:**\n\nSizda hozir: **{bonus} ta bonus Coin** bor.\n\n"
+        f"💰 **Sizning hamyoningiz:**\n\nSizda hozir: ✨ **{bonus} ta bonus Coin** bor.\n\n"
         f"⚠️ *Balansingiz 550 coinga yetganda uni tekinga o'yin hisobingizga chiqarib olishingiz mumkin!*"
     )
 
@@ -188,29 +195,13 @@ async def withdraw_pass(message: types.Message, state: FSMContext):
 
 @dp.message(F.text == "📊 Narxlar va Paketlar")
 async def show_prices(message: types.Message):
-    text = "📋 **Bizdagi mavjud coin paketlari va narxlari:**\n\n📥 **ID orqali (Akkountga kirmasdan):**\n"
+    text = "📋 ✨ **Mavjud ultra arzon paketlar va narxlar:**\n\n📥 **ID orqali (Kirmasdan yuklash ⚡️):**\n"
     for pack in DIRECT_PACKS.values():
-        text += f"▪️ {pack['name']} — {pack['price']} (+{pack['cashback']} bonus)\n"
-    text += "\n📱 **Akkountga kirib yuklash (Android & iOS):**\n"
+        text += f"▪️ {pack['name']} — `{pack['price']}` (+{pack['cashback']} bonus)\n"
+    text += "\n📱 **Akkountga kirib yuklash (Android & iOS 🔑):**\n"
     for pack in LOGIN_PACKS.values():
-        text += f"▪️ {pack['name']} — {pack['price']} (+{pack['cashback']} bonus)\n"
+        text += f"▪️ {pack['name']} — `{pack['price']}` (+{pack['cashback']} bonus)\n"
     await message.answer(text, parse_mode="Markdown")
 
 @dp.message(F.text == "ℹ️ Qo'llanma / Qoidalar")
 async def show_guide(message: types.Message):
-    await message.answer("ℹ️ **Ish vaqti:** 08:00 dan 01:00 gacha.\n\nCard raqamga pul o'tkazib chek yuboring. Ikkala usulda ham xavfsizlik uchun ID va parol so'raladi!")
-
-@dp.message(F.text == "⭐️ Sharhlar")
-async def show_reviews(message: types.Message):
-    await message.answer("⭐️ **Mijozlarimiz fikrlari va barcha isbotlar shu yerda:**\nhttps://t.me")
-
-@dp.message(F.text == "👨‍💻 Aloqa / Admin")
-async def show_contact(message: types.Message):
-    await message.answer("👨‍💻 Muammolar bo'lsa admin bilan bog'laning: @Jocker_7005")
-
-# 🪙 COIN SOTIB OLISH BOSQICHLARI
-@dp.message(F.text == "🪙 Coin sotib olish")
-async def start_order(message: types.Message, state: FSMContext):
-    if not is_work_time():
-        await message.answer("🕒 **Do'konimiz yopiq!**\nIsh vaqti: 08:00 dan 01:00 gacha.")
-        return{added_bonus} bonus qo'shildi!", reply_markup=get_main_keyboard())await state.clear()@dp.callback_query(F.data.startswith("done_"))async def process_admin_done(callback: types.CallbackQuery):, user_id, order_id = callback.data.split("")try:await bot.send_message(chat_id=int(user_id), text=f"🎉 Xushxabar!\nSizning #{order_id} raqamli buyurtmangiz muvaffaqiyatli bajarildi! ✅")caption_text = f"✅ MUVAFFAQIYATLI XARID!\n\n🆔 Buyurtma raqami: #{order_id}\n⚡️ Status: Muvaffaqiyatli yakunlandi\n⭐️ Bizni tanlaganingiz uchun rahmat!"if callback.message.photo:await bot.send_photo(chat_id=PROOF_CHAT_ID, photo=callback.message.photo[-1].file_id, caption=caption_text)else:await bot.send_message(chat_id=PROOF_CHAT_ID, text=caption_text)await callback.message.edit_reply_markup(reply_markup=None)await callback.message.answer(f"🟢 #{order_id}-buyurtma bajarildi va isbot guruhiga joylandi.")except Exception as e:await callback.answer(f"Xato: {e}")@dp.callback_query(F.data.startswith("reject_"))async def process_admin_reject(callback: types.CallbackQuery, state: FSMContext):, user_id, order_id = callback.data.split("")await state.update_data(reject_user_id=user_id, reject_order_id=order_id, reject_msg=callback.message)await callback.message.answer(f"❌ #{order_id} buyurtmaning rad etish sababini shu yerga yozib yuboring:")await state.set_state(AdminState.waiting_rejection_reason)await callback.answer()@dp.message(AdminState.waiting_rejection_reason)async def get_rejection_reason(message: types.Message, state: FSMContext):user_data = await state.get_data()uid = int(user_data['reject_user_id'])oid = user_data['reject_order_id']admin_msg = user_data['reject_msg']try:await bot.send_message(chat_id=uid, text=f"❌ Sizning #{oid} raqamli buyurtmangiz rad etildi!\n\n⚠️ Sababi: {message.text}")await admin_msg.edit_reply_markup(reply_markup=None)await message.answer(f"🔴 #{oid}-buyurtma rad etildi.")except:await message.answer("❌ Mijozga xabar yuborishda xatolik.")await state.clear()async def main():port = int(os.environ.get("PORT", 10000))server = await asyncio.start_server(lambda r, w: None, '0.0.0.0', port)await dp.start_polling(bot)if name == 'main':asyncio.run(main())
