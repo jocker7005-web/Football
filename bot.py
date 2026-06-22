@@ -153,10 +153,10 @@ async def show_prices(message: types.Message):
 async def show_guide(message: types.Message): await message.answer("ℹ️ Card raqamga pul o'tkazib chek yuboring.")
 
 @dp.message(F.text == "⭐️ Sharhlar")
-async def show_reviews(message: types.Message): await message.answer("⭐️ Isbotlar guruhimiz:\nhttps://t.me")
+async def show_reviews(message: types.Message): await message.answer("⭐️ Isbotlar guruhimiz:\nhttps://t.me/coinssharhlar")
 
 @dp.message(F.text == "👨‍💻 Aloqa / Admin")
-async def show_contact(message: types.Message): await message.answer("👨‍💻 Admin: @Jocker_7005")
+async def show_contact(message: types.Message): await message.answer("👨‍💻 Admin: @notanish7005")
 @dp.message(F.text == "🪙 Coin sotib olish")
 async def start_order(message: types.Message, state: FSMContext):
     if not is_work_time():
