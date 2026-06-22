@@ -13,15 +13,15 @@ from aiogram.filters import Command, StateFilter, CommandStart
 logging.basicConfig(level=logging.INFO)
 
 # --- ASOSIY SOZLAMALAR ---
-BOT_TOKEN = "8893476065:AAFseE8gnPCvfV_GALln-PCvK-tz7Wihn40" ✅ Token joylandi!
-ADMIN_ID = 1678146043          # ✅ Sizning Telegram ID raqamingiz
-OTZIV_KANAL_ID = "@coinsotziv" # ✅ Otziv kanali
+BOT_TOKEN = "8893476065:AAFseE8gnPCvfV_GALln-PCvK-tz7Wihn40"
+ADMIN_ID = 1678146043          
+OTZIV_KANAL_ID = "@coinsotziv" 
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 router = Router()
 
-# Ma'lumotlar o'chib ketmasligi uchun Amvera /data doimiy xotirasiga o'tkazildi
+# Ma'lumotlar o'chib ketmasligi uchun Amvera /data doimiy xotirasi
 DB_PATH = "/data/efootball_master.db"
 
 # --- COINS PAKETLARI (ANDROID NARXLARI) ---
@@ -60,6 +60,9 @@ class AdminStates(StatesGroup):
 # MA'LUMOTLAR BAZASI TIZIMI (SQLITE)
 # ============================================================
 def init_all_dbs():
+    # Amvera-da xatolik bermasligi uchun papkani tekshirib, yaratib olamiz
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("CREATE TABLE IF NOT EXISTS users (user_id INTEGER PRIMARY KEY, username TEXT)")
@@ -218,7 +221,8 @@ def coins_menu():
 # ============================================================
 @router.message(CommandStart())
 async def cmd_start(message: Message):
-    add_user(message.from_user.id, message.from_user.username)
+    username = message.from_user.username if message.from_user.username else f"id_{message.from_user.id}"
+    add_user(message.from_user.id, username)
     await message.answer(
         f"⚽️ Salom, {message.from_user.full_name}!\neFootball Coins sotuvchi va Onlayn Turnirlar botiga xush kelibsiz!",
         reply_markup=main_menu()
@@ -242,12 +246,12 @@ async def process_package(callback: CallbackQuery, state: FSMContext):
     package_info = COINS_PACKAGES[pkg_id]
     await state.update_data(chosen_pkg=package_info['coins'], chosen_price=package_info['price'])
     await callback.message.answer(
-        f"🛒 Siz tanladingiz: *{package_info['coins']}*\n"
-        f"💰 To'lov miqdori: *{package_info['price']}*\n\n"
-        f"💳 Karta raqami: `9860 3501 0897 5409`\n"
-        f"👤 Karta egasi: *Xusanova Maqsuda*\n\n"
-        f"📥 Pulni o'tkazib bo'lgach, **to'lov chekini (skrinshotini) rasm ko'rinishida** shu yerga yuboring:",
-        parse_mode="Markdown"
+        f"🛒 Siz tanladingiz: <b>{package_info['coins']}</b>\n"
+        f"💰 To'lov miqdori: <b>{package_info['price']}</b>\n\n"
+        f"💳 Karta raqami: <code>9860 3501 0897 5409</code>\n"
+        f"👤 Karta egasi: <b>Xusanova Maqsuda</b>\n\n"
+        f"📥 Pulni o'tkazib bo'lgach, <b>to'lov chekini (skrinshotini) rasm ko'rinishida</b> shu yerga yuboring:",
+        parse_mode="HTML"
     )
     await state.set_state(OrderState.sending_receipt)
     await callback.answer()
@@ -274,23 +278,24 @@ async def process_password(message: Message, state: FSMContext):
     price = user_data['chosen_price']
     receipt_file_id = user_data['receipt_file_id']
     
+    username = message.from_user.username if message.from_user.username else f"id_{message.from_user.id}"
     order_id = create_order(message.from_user.id, package, price, login, password, receipt_file_id)
     await message.answer(f"✅ Rahmat! Buyurtmangiz **#{order_id}** raqami bilan qabul qilindi. Admin tekshirib, coinslarni yuklagach sizga xabar boradi!")
     await state.clear()
     
     admin_text = (
-        f"🚨 **YANGI BUYURTMA #{order_id}** 🚨\n\n"
-        f"👤 **Mijoz:** @{message.from_user.username} (ID: {message.from_user.id})\n"
-        f"📦 **Paket:** {package}\n"
-        f"💰 **Narxi:** {price}\n\n"
-        f"🔑 **Konami Login:** `{login}`\n"
-        f"🔒 **Konami Parol:** `{password}`\n\n"
-        f"📱 *Android tizimi orqali akkauntga kirib yuklanadi!*"
+        f"🚨 <b>YANGI BUYURTMA #{order_id}</b> 🚨\n\n"
+        f"👤 <b>Mijoz:</b> @{username} (ID: {message.from_user.id})\n"
+        f"📦 <b>Paket:</b> {package}\n"
+        f"💰 <b>Narxi:</b> {price}\n\n"
+        f"🔑 <b>Konami Login:</b> <code>{login}</code>\n"
+        f"🔒 <b>Konami Parol:</b> <code>{password}</code>\n\n"
+        f"📱 <i>Android tizimi orqali akkauntga kirib yuklanadi!</i>"
     )
     admin_kb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="✅ Bajarildi", callback_data=f"done_{order_id}_{message.from_user.id}")]
     ])
-    await bot.send_photo(chat_id=ADMIN_ID, photo=receipt_file_id, caption=admin_text, reply_markup=admin_kb, parse_mode="Markdown")
+    await bot.send_photo(chat_id=ADMIN_ID, photo=receipt_file_id, caption=admin_text, reply_markup=admin_kb, parse_mode="HTML")
 
 # ============================================================
 # ADMIN TASDIQLASHI VA RASMLI OTZIV TIZIMI
@@ -304,11 +309,12 @@ async def admin_complete_order(callback: CallbackQuery):
     try:
         await bot.send_message(
             chat_id=int(user_id), 
-            text=f"🎉 Xushxabar! **#{order_id}** raqamli buyurtmangiz muvaffaqiyatli bajarildi va coinslar yuklandi! ✅\n\n"
+            text=f"🎉 Xushxabar! <b>#{order_id}</b> raqamli buyurtmangiz muvaffaqiyatli bajarildi va coinslar yuklandi! ✅\n\n"
                  f"Iltimos, pastdagi tugmani bosib, coins tushgan o'yin ichidagi skrinshot (rasm) va fikringizni qoldiring 👇",
-            reply_markup=otziv_kb
+            reply_markup=otziv_kb,
+            parse_mode="HTML"
         )
-        await callback.message.edit_caption(caption=callback.message.caption + "\n\n🟢 **STATUS: BAJARILDI**")
+        await callback.message.edit_caption(caption=callback.message.caption + "\n\n🟢 <b>STATUS: BAJARILDI</b>", parse_mode="HTML")
     except Exception as e:
         await callback.message.answer(f"Xatolik: {e}")
     await callback.answer()
@@ -334,17 +340,17 @@ async def process_review_text(message: Message, state: FSMContext):
     order_id = user_data['review_order_id']
     photo_id = user_data['review_photo_id']
     review_text = message.text
-    username = f"@{message.from_user.username}" if message.from_user.username else "Foydalanuvchi"
+    username = message.from_user.username if message.from_user.username else f"id_{message.from_user.id}"
 
     kanal_matni = (
-        f"⭐️ **YANGI OTZIV #{order_id}** ⭐️\n\n"
-        f"👤 **Mijoz:** {username}\n"
-        f"💬 **Fikr:** {review_text}\n\n"
+        f"⭐️ <b>YANGI OTZIV #{order_id}</b> ⭐️\n\n"
+        f"👤 <b>Mijoz:</b> @{username}\n"
+        f"💬 <b>Fikr:</b> {review_text}\n\n"
         f"🤝 Xaridingiz uchun rahmat!\n"
         f"🤖 @coinsotziv hamjamiyati"
     )
     try:
-        await bot.send_photo(chat_id=OTZIV_KANAL_ID, photo=photo_id, caption=kanal_matni)
+        await bot.send_photo(chat_id=OTZIV_KANAL_ID, photo=photo_id, caption=kanal_matni, parse_mode="HTML")
         await message.answer("❤️ Katta rahmat! Otzivingiz rasmi va matni bilan birga ochiq @coinsotziv kanalimizga joylandi.")
     except Exception as e:
         await message.answer("⚠️ Otziv kanalga chiqmadi. Bot kanalingizda admin ekanligini tekshiring.")
@@ -370,12 +376,12 @@ async def show_setka(callback: CallbackQuery):
         await callback.message.answer("📊 Hozircha turnir setkasi bo'sh. Admin qur'a tashlashini kuting.")
         await callback.answer()
         return
-    text = "📊 **JORIY TURNIR SETKASI (JUFTLIKLAR)** 📊\n\n"
+    text = "📊 <b>JORIY TURNIR SETKASI (JUFTLIKLAR)</b> 📊\n\n"
     for match in matches:
         match_id, p1, p2, score, status = match
         status_emoji = "⏳" if status == "Kutilmoqda" else "✅"
         text += f"🔹 O'yin #{match_id}: @{p1}  {score}  @{p2}  [{status_emoji} {status}]\n"
-    await callback.message.answer(text)
+    await callback.message.answer(text, parse_mode="HTML")
     await callback.answer()
 
 @router.callback_query(F.data == "view_rating")
@@ -385,12 +391,12 @@ async def show_rating(callback: CallbackQuery):
         await callback.message.answer("🏆 Reyting jadvali hozircha bo'sh.")
         await callback.answer()
         return
-    text = "🏆 **EFOOTBALL REYTING JADVALI** 🏆\n\n⏱ O' | G' | D | M | **OCHKO** | O'yinchi\n----------------------------------------\n"
+    text = "🏆 <b>EFOOTBALL REYTING JADVALI</b> 🏆\n\n⏱ O' | G' | D | M | <b>OCHKO</b> | O'yinchi\n----------------------------------------\n"
     for index, player in enumerate(players, start=1):
         username, played, wins, draws, losses, points = player
         medal = "🥇" if index == 1 else "🥈" if index == 2 else "🥉" if index == 3 else f"{index}."
-        text += f"{medal} {played} | {wins} | {draws} | {losses} | **{points}** | @{username}\n"
-    await callback.message.answer(text, parse_mode="Markdown")
+        text += f"{medal} {played} | {wins} | {draws} | {losses} | <b>{points}</b> | @{username}\n"
+    await callback.message.answer(text, parse_mode="HTML")
     await callback.answer()
 
 # ============================================================
@@ -399,7 +405,7 @@ async def show_rating(callback: CallbackQuery):
 @router.message(Command("stats"), F.from_user.id == ADMIN_ID)
 async def admin_stats(message: Message):
     total_users, total_orders = get_stats_db()
-    await message.answer(f"📊 **BOT STATISTIKASI:**\n\n👥 Jami a'zolar: {total_users} ta\n📦 Jami tushgan buyurtmalar: {total_orders} ta")
+    await message.answer(f"📊 <b>BOT STATISTIKASI:</b>\n\n👥 Jami a'zolar: {total_users} ta\n📦 Jami tushgan buyurtmalar: {total_orders} ta", parse_mode="HTML")
 
 @router.message(Command("broadcast"), F.from_user.id == ADMIN_ID)
 async def start_broadcast(message: Message, state: FSMContext):
@@ -428,7 +434,7 @@ async def admin_start_qura(message: Message):
         return
     random.shuffle(players)
     matches_to_save = []
-    text = "🎲 **AVTOMATIK QUR'A NATIJALARI (SETKA):**\n\n"
+    text = "🎲 <b>AVTOMATIK QUR'A NATIJALARI (SETKA):</b>\n\n"
     for i in range(0, len(players), 2):
         if i + 1 < len(players):
             matches_to_save.append((players[i][0], players[i][1], players[i+1][0], players[i+1][1]))
@@ -437,15 +443,6 @@ async def admin_start_qura(message: Message):
             matches_to_save.append((players[i][0], players[i][1], 0, "RAQIBSIZ"))
             text += f"🎮 @{players[i][1]}  VS  ❌ RAQIBSIZ (Avto-o'tish)\n"
     save_matches(matches_to_save)
-    await message.answer(text + "\n🟢 Turnir setkasi muvaffaqiyatli saqlandi va e'lon qilindi!")
+    await message.answer(text + "\n🟢 Turnir setkasi muvaffaqiyatli saqlandi va e'lon qilindi!", parse_mode="HTML")
 
-@router.message(Command("score"), F.from_user.id == ADMIN_ID)
-async def admin_change_score(message: Message):
-    try:
-        args = message.text.split()
-        user_id, result = int(args[1]), args[2].lower()
-        user_chat = await bot.get_chat(user_id)
-        update_player_score(user_id, user_chat.username, result)
-        await message.answer(f"✅ @{user_chat.username} uchun ochko yangilandi: {result.upper()}")
-    except:
-        await message.answer("❌ Xato format. To'g'ri format: `/score [us
+@router.message(Command("score"), F.from_user
