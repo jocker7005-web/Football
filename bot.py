@@ -43,7 +43,7 @@ LOGIN_PACKS = {
     "a_550": {"name": "🪙 550 coins (Kirib)", "price": "70.000 so'm", "cashback": 5},
     "a_750": {"name": "🪙 750 coins (Kirib)", "price": "95.000 so'm", "cashback": 7},
     "a_1040": {"name": "🪙 1040 coins (Kirib)", "price": "125.000 so'm", "cashback": 10},
-    "a_1790": {"name": "🪙 1790 coins (Kirib)", "price": "210.000 so'm", "cashback": 15}
+    "a_1790": {"name": "🪙 1790 coins (Kirib)", "price": "210.000 so'm", "cashback": 15},
     "a_2130": {"name": "🪙 2130 coins (Kirib)", "price": "240.000 so'm", "cashback": 18},
     "a_2680": {"name": "🪙 2680 coins (Kirib)", "price": "310.000 so'm", "cashback": 22},
     "a_3250": {"name": "🪙 3250 coins (Kirib)", "price": "350.000 so'm", "cashback": 25},
