@@ -25,12 +25,16 @@ DATA_FILE = "bot_data.json"
 # --- MA'LUMOTLAR BAZASI (JSON) FUNKSIYALARI ---
 def load_data():
     if not os.path.exists(DATA_FILE):
-        return {"last_id": 1000, "orders": {}, "users": {}, "tournament": []}
+        return {"last_id": 0, "orders": {}, "users": {}, "tournament": []}
     try:
         with open(DATA_FILE, "r") as f:
-            return json.load(f)
+            data = json.load(f)
+            # Agar eski vaqt formati qolib ketgan bo'lsa, bazani tozalab #N1 ga o'tkazadi
+            if "last_id" in data and len(str(data["last_id"])) > 4:
+                return {"last_id": 0, "orders": {}, "users": {}, "tournament": []}
+            return data
     except Exception:
-        return {"last_id": 1000, "orders": {}, "users": {}, "tournament": []}
+        return {"last_id": 0, "orders": {}, "users": {}, "tournament": []}
 
 def save_data(data):
     with open(DATA_FILE, "w") as f:
