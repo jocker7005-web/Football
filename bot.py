@@ -294,12 +294,13 @@ async def process_credentials(message: types.Message, state: FSMContext):
         f"To'lovni amalga oshiring:\n💳 Karta raqam: `{KARTA}`\n\n"
         f"To'lov qilgach, chek (skrinshot) rasmini shu yerga yuboring."
     )
-
 @dp.message(BotStates.sending_receipt, F.photo)
 async def process_receipt(message: types.Message, state: FSMContext):
+    # 1. Avval foydalanuvchi holatini darhol tozalaymiz (kesh tiqilmasligi uchun)
+    await state.clear()
+    
     data = load_data()
     order_id = get_next_order_id()
-    
     fsm_data = await state.get_data()
     
     data["orders"][str(order_id)] = {
