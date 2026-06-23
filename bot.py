@@ -186,8 +186,8 @@ async def cmd_my_orders(message: types.Message):
         status = o_data.get("status", "Kutilmoqda ⏳")
         text += (
             f"🔹 **Buyurtma #{o_id}**\n"
-            f"🛒 Turi: {details.get('platform', 'Noma\'lum')}\n"
-            f"💰 Paket: {details.get('packet', 'Noma\'lum')}\n"
+            f"🛒 Turi: {details.get('platform', 'Nomalum')}\n"
+            f"💰 Paket: {details.get('packet', 'Nomalum')}\n"
             f"📊 Holati: {status}\n\n"
         )
     await message.answer(text)
