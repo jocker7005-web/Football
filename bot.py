@@ -275,8 +275,8 @@ async def process_region_choice(callback: types.CallbackQuery, state: FSMContext
     await callback.answer()
 @dp.callback_query(F.data.startswith("reg_p:"), BotStates.choosing_region_coins)
 async def process_region_packet(callback: types.CallbackQuery, state: FSMContext):
-    packet = callback.data.split(":", 1)[1]
-    raw_coin = "".join(filter(str.isdigit, packet.split("->")[0].replace(".", "")))
+    packet = callback.data.split(":", 1)
+    raw_coin = "".join(filter(str.isdigit, packet.split("->").replace(".", "")))
     coin_amount = int(raw_coin) if raw_coin else 0
 
     await state.update_data(packet=packet, coin_amount=coin_amount)
@@ -337,7 +337,7 @@ def get_next_order_id():
 # --- ADMIN PROCESS ---
 @dp.callback_query(F.data.startswith("adm_pay_ok:"))
 async def admin_payment_ok(callback: types.CallbackQuery):
-    order_id = callback.data.split(":")[1]
+    order_id = callback.data.split(":")
     
     builder = InlineKeyboardBuilder()
     builder.button(text="🎉 Buyurtma bajarildi", callback_data=f"adm_done:{order_id}")
@@ -353,7 +353,7 @@ async def admin_payment_ok(callback: types.CallbackQuery):
 
 @dp.callback_query(F.data.startswith("adm_done:"))
 async def admin_order_done(callback: types.CallbackQuery):
-    order_id = callback.data.split(":")[1]
+    order_id = callback.data.split(":")
     data = load_data()
     order = data["orders"].get(str(order_id))
     
@@ -402,7 +402,7 @@ async def admin_order_done(callback: types.CallbackQuery):
 
 @dp.callback_query(F.data.startswith("adm_rej:"))
 async def admin_order_reject(callback: types.CallbackQuery):
-    order_id = callback.data.split(":")[1]
+    order_id = callback.data.split(":")
     data = load_data()
     order = data["orders"].get(str(order_id))
     
@@ -419,7 +419,7 @@ async def admin_order_reject(callback: types.CallbackQuery):
 # --- SHARH QOBUL QILISH VA KANALGA JOYLASHTIRISH ---
 @dp.callback_query(F.data.startswith("write_review:"))
 async def start_review(callback: types.CallbackQuery, state: FSMContext):
-    order_id = callback.data.split(":")[1]
+    order_id = callback.data.split(":")
     await state.update_data(review_order_id=order_id)
     await state.set_state(BotStates.writing_review)
     await callback.message.answer("Xizmatimiz haqidagi fikringizni (sharhingizni) yozib yuboring:")
