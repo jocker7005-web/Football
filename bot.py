@@ -1,5 +1,4 @@
 import logging
-import sqlite3
 import asyncio
 from aiogram import Bot, Dispatcher, Router, F
 from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
@@ -11,19 +10,18 @@ from aiogram.filters import CommandStart
 # --- SOZLAMALAR ---
 BOT_TOKEN = "8893476065:AAFseE8gnPCvfV_GALln-PCvK-tz7Wihn40"
 ADMIN_ID = 1678146043 
+CHANNEL_ID = "-1001908315496"
 
-# --- INIT ---
 logging.basicConfig(level=logging.INFO)
 bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher(storage=MemoryStorage())
+storage = MemoryStorage()
+dp = Dispatcher(storage=storage)
 router = Router()
 
-# --- HOLATLAR ---
 class OrderStates(StatesGroup):
     waiting_receipt = State()
     waiting_proposal = State()
 
-# --- MENYU (Takrorlanishni oldini olish uchun oddiy va aniq) ---
 def get_main_kb(user_id):
     kb_list = [
         [KeyboardButton(text="🛒 Android Coins"), KeyboardButton(text="🌍 Regionlar uchun Coins")],
@@ -34,57 +32,45 @@ def get_main_kb(user_id):
     ]
     if user_id == ADMIN_ID:
         kb_list.append([KeyboardButton(text="🛠 Admin Panel")])
-    return ReplyKeyboardMarkup(keyboard=kb_list, resize_keyboard=True, one_time_keyboard=False)
+    return ReplyKeyboardMarkup(keyboard=kb_list, resize_keyboard=True)
 
 # --- START ---
-@router.message(CommandStart(), state="*")
-async def start(message: Message, state: FSMContext):
+@router.message(CommandStart())
+async def start_cmd(message: Message, state: FSMContext):
     await state.clear()
-    await message.answer("Assalomu alaykum! Xush kelibsiz.", reply_markup=get_main_kb(message.from_user.id))
+    await message.answer("Assalomu alaykum!", reply_markup=get_main_kb(message.from_user.id))
 
-# --- ANDROID ---
-@router.message(F.text == "🛒 Android Coins", state="*")
+# --- HANDLERLAR (argumentlar aniq yozildi) ---
+@router.message(F.text == "🛒 Android Coins")
 async def shop_android(message: Message, state: FSMContext):
     await state.clear()
-    await state.update_data(region="Android")
-    prices = {"260 coins": 40000, "300 coins": 45000}
-    kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=f"{k} - {v} so'm", callback_data=f"pkg_{k.split()[0]}_{v}")] for k, v in prices.items()])
-    await message.answer("Android paketini tanlang:", reply_markup=kb)
+    await message.answer("Android paketini tanlang (test):", 
+                         reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="260 coins - 40000", callback_data="pkg_android_260")]]))
 
-# --- REGION ---
-@router.message(F.text == "🌍 Regionlar uchun Coins", state="*")
+@router.message(F.text == "🌍 Regionlar uchun Coins")
 async def shop_region(message: Message, state: FSMContext):
     await state.clear()
-    regions = ["Япония", "ОАЭ"]
-    kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=r, callback_data=f"reg_{r}")] for r in regions])
-    await message.answer("Regionni tanlang:", reply_markup=kb)
+    await message.answer("Regionni tanlang:", 
+                         reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Япония", callback_data="reg_yapon")]]))
 
-@router.callback_query(F.data.startswith("reg_"), state="*")
+@router.callback_query(F.data.startswith("reg_"))
 async def choose_reg(callback: CallbackQuery, state: FSMContext):
-    reg = callback.data.split("_")[1]
-    await state.update_data(region=reg)
-    prices = {"578 coins": 70000}
-    kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=f"{k} - {v} so'm", callback_data=f"pkg_{k.split()[0]}_{v}")] for k, v in prices.items()])
-    await callback.message.answer(f"{reg} tanlandi. Paketni tanlang:", reply_markup=kb)
+    await state.update_data(region=callback.data)
+    await callback.message.answer("Paket tanlang:", 
+                                  reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="578 coins - 70000", callback_data="pkg_region_578")]]))
 
-# --- BUYURTMA ---
-@router.callback_query(F.data.startswith("pkg_"), state="*")
+@router.callback_query(F.data.startswith("pkg_"))
 async def order_start(callback: CallbackQuery, state: FSMContext):
-    data = callback.data.split("_")
-    await state.update_data(coins=data[1], price=data[2])
     await state.set_state(OrderStates.waiting_receipt)
-    await callback.message.answer(f"Narx: {data[2]} so'm. Chekni rasm sifatida yuboring:")
+    await callback.message.answer("Chekni rasm sifatida yuboring:")
 
 @router.message(OrderStates.waiting_receipt, F.photo)
 async def get_receipt(message: Message, state: FSMContext):
-    data = await state.get_data()
-    region = data.get('region', 'Noma\'lum')
-    await bot.send_photo(ADMIN_ID, message.photo[-1].file_id, caption=f"Buyurtma: {region}, {data['coins']}, {data['price']}")
+    await bot.send_message(ADMIN_ID, "Yangi buyurtma keldi!")
     await message.answer("✅ Chek qabul qilindi.", reply_markup=get_main_kb(message.from_user.id))
     await state.clear()
 
-# --- TAKLIF ---
-@router.message(F.text == "✍️ Taklif qoldirish", state="*")
+@router.message(F.text == "✍️ Taklif qoldirish")
 async def prop_start(message: Message, state: FSMContext):
     await state.clear()
     await state.set_state(OrderStates.waiting_proposal)
@@ -96,7 +82,12 @@ async def get_prop(message: Message, state: FSMContext):
     await message.answer("Rahmat!", reply_markup=get_main_kb(message.from_user.id))
     await state.clear()
 
-# --- MAIN ---
+# Boshqa tugmalar uchun
+@router.message(F.text.in_(["🏆 Turnir", "🎁 Bonuslarim", "📖 Qo'llanma", "📦 Mening buyurtmalarim", "⭐ Sharhlar", "👨‍💻 Admin / Yordam", "🛠 Admin Panel"]))
+async def other_stuff(message: Message, state: FSMContext):
+    await state.clear()
+    await message.answer("Bu bo'lim ustida ishlanmoqda.")
+
 async def main():
     dp.include_router(router)
     await dp.start_polling(bot)
