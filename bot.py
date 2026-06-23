@@ -12,7 +12,7 @@ from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 logging.basicConfig(level=logging.INFO)
 
 # --- MAXFIY MA'LUMOTLAR VA KONSTANTALAR ---
-BOT_TOKEN = "8893476065:AAElbQEvDwW1AvsmnqMxfqCx8xUtXGqDGx4"
+BOT_TOKEN = "8893476065:AAFseE8gnPCvfV_GALln-PCvK-tz7Wihn40"
 ADMIN_ID = 1678146043
 KARTA = "9860 3501 0897 5409 (Xusanova M)"
 REVIEWS_CHANNEL = -1001908315496
@@ -108,7 +108,7 @@ async def cmd_reviews_info(message: types.Message):
 
 @dp.message(F.text == "👨‍💻 Admin / Yordam")
 async def cmd_support(message: types.Message):
-    await message.answer("👨‍💻 Har qanday savollar yoki muammolar bo'yicha adminga murojaat qiling: @notanish7005")
+    await message.answer("👨‍💻 Har qanday savollar yoki muammolar bo'yicha adminga murojaat qiling: @jocker7005")
 
 # --- 🎁 BONUSLARIM VA REFERAL TIZIMI ---
 @dp.message(F.text == "🎁 Bonuslarim")
@@ -145,8 +145,8 @@ async def process_withdraw(callback: types.CallbackQuery):
         save_data(data)
         
         await bot.send_message(
-            ADMIN_ID,
-            f"🎁 **BONUS YECHISH SO'ROVI**\n\nMijoz: {callback.from_user.mention}\nID: {user_id}\n600 Coins bonus yechishni so'radi."
+            chat_id=ADMIN_ID,
+            text=f"🎁 **BONUS YECHISH SO'ROVI**\n\nMijoz: {callback.from_user.mention}\nID: {user_id}\n600 Coins bonus yechishni so'radi."
         )
         await callback.message.answer("✅ So'rov adminga yuborildi. Tez orada siz bilan bog'lanishadi.")
     else:
@@ -161,8 +161,8 @@ async def cmd_suggestion(message: types.Message, state: FSMContext):
 @dp.message(BotStates.writing_suggestion, F.text)
 async def process_suggestion(message: types.Message, state: FSMContext):
     await bot.send_message(
-        ADMIN_ID,
-        f"✍️ **YANGI TAKLIF/SHIKOYAT**\n\nKimdan: {message.from_user.mention}\nID: {message.from_user.id}\n\nMatn:\n{message.text}"
+        chat_id=ADMIN_ID,
+        text=f"✍️ **YANGI TAKLIF/SHIKOYAT**\n\nKimdan: {message.from_user.mention}\nID: {message.from_user.id}\n\nMatn:\n{message.text}"
     )
     await state.clear()
     await message.answer("✅ Taklifingiz muvaffaqiyatli adminga yetkazildi. Rahmat!")
@@ -172,7 +172,7 @@ async def process_suggestion(message: types.Message, state: FSMContext):
 async def cmd_my_orders(message: types.Message):
     user_id = message.from_user.id
     data = load_data()
-    orders = data["orders"]
+    orders = data.get("orders", {})
     
     user_orders = {k: v for k, v in orders.items() if str(v["user_id"]) == str(user_id)}
     
@@ -182,12 +182,12 @@ async def cmd_my_orders(message: types.Message):
         
     text = "📦 **Sizning xaridlar tariqingiz:**\n\n"
     for o_id, o_data in user_orders.items():
-        details = o_data["details"]
+        details = o_data.get("details", {})
         status = o_data.get("status", "Kutilmoqda ⏳")
         text += (
             f"🔹 **Buyurtma #{o_id}**\n"
-            f"🛒 Turi: {details['platform']}\n"
-            f"💰 Paket: {details['packet']}\n"
+            f"🛒 Turi: {details.get('platform', 'Noma\'lum')}\n"
+            f"💰 Paket: {details.get('packet', 'Noma\'lum')}\n"
             f"📊 Holati: {status}\n\n"
         )
     await message.answer(text)
@@ -244,17 +244,20 @@ async def process_android_choice(callback: types.CallbackQuery, state: FSMContex
     await callback.message.answer("O'yinga kirish uchun Konami ID va Parolni kiriting:\n\n*Misol:* info@gmail.com / parol123")
     await callback.answer()
 
-# --- 🌍 REGIONLAR UCHUN COINS XARID BOSQICHI ---
+# --- 🌍 REGIONLAR UCHUN COINS XARID BOSQICHI (BARCHA 13 TA DAVLAT) ---
 @dp.message(F.text == "🌍 Regionlar uchun Coins")
 async def cmd_region_coins(message: types.Message, state: FSMContext):
-    regions = ["Япония 🇯🇵", "ОАЭ 🇦🇪", "Египет 🇪🇬", "Канада 🇨🇦", "Мексика 🇲🇽", "США 🇺🇸", "Саудовская Аравия 🇸🇦"]
+    regions = [
+        "Япония 🇯🇵", "ОАЭ 🇦🇪", "Египет 🇪🇬", "Канада 🇨🇦", 
+        "Мексика 🇲🇽", "США 🇺🇸", "Саудовская Аравия 🇸🇦", "Бразилия 🇧🇷", 
+        "Турция 🇹🇷", "Аргентина 🇦🇷", "Индия 🇮🇳", "Индонезия 🇮🇩", "Европа 🇪🇺"
+    ]
     builder = InlineKeyboardBuilder()
     for reg in regions:
         builder.button(text=reg, callback_data=f"reg_set:{reg}")
     builder.adjust(2)
     await state.set_state(BotStates.choosing_region)
     await message.answer("Iltimos, akkauntingiz ro'yxatdan o'tgan regionni tanlang:", reply_markup=builder.as_markup())
-
 @dp.callback_query(F.data.startswith("reg_set:"), BotStates.choosing_region)
 async def process_region_choice(callback: types.CallbackQuery, state: FSMContext):
     region = callback.data.split(":", 1)[1]
@@ -273,16 +276,17 @@ async def process_region_choice(callback: types.CallbackQuery, state: FSMContext
     await state.set_state(BotStates.choosing_region_coins)
     await callback.message.edit_text(f"Tanlangan region: {region}\nCoins paketini tanlang:", reply_markup=builder.as_markup())
     await callback.answer()
+
 @dp.callback_query(F.data.startswith("reg_p:"), BotStates.choosing_region_coins)
 async def process_region_packet(callback: types.CallbackQuery, state: FSMContext):
-    packet = callback.data.split(":", 1)
-    raw_coin = "".join(filter(str.isdigit, packet.split("->").replace(".", "")))
+    packet = callback.data.split(":", 1)[1]
+    raw_coin = "".join(filter(str.isdigit, packet.split("->")[0].replace(".", "")))
     coin_amount = int(raw_coin) if raw_coin else 0
 
     await state.update_data(packet=packet, coin_amount=coin_amount)
     await callback.message.delete()
     await state.set_state(BotStates.entering_credentials)
-    await callback.message.answer("MyKonami orqali kirish uchun Email va Parolni yuboring:\n\n*Misol:* email@domain.com / parol123")
+    await callback.message.answer("MyKonami (Region) orqali kirish uchun Email va Parolni yuboring:\n\n*Misol:* email@domain.com / parol123")
     await callback.answer()
 
 # --- ACCOUNT MA'LUMOTLARI VA CHEK QABUL QILISH ---
@@ -296,9 +300,6 @@ async def process_credentials(message: types.Message, state: FSMContext):
     )
 @dp.message(BotStates.sending_receipt, F.photo)
 async def process_receipt(message: types.Message, state: FSMContext):
-    # 1. Avval foydalanuvchi holatini darhol tozalaymiz (kesh tiqilmasligi uchun)
-    await state.clear()
-    
     data = load_data()
     order_id = get_next_order_id()
     fsm_data = await state.get_data()
@@ -317,15 +318,29 @@ async def process_receipt(message: types.Message, state: FSMContext):
     builder.button(text="❌ Rad etish", callback_data=f"adm_rej:{order_id}")
     builder.adjust(2)
     
-    admin_text = (
-        f"🚨 **YANGI BUYURTMA #{order_id}**\n\n"
-        f"👤 Mijoz: {message.from_user.mention} (ID: {message.from_user.id})\n"
-        f"📱 Platforma: {fsm_data['platform']}\n"
-        f"🌍 Region: {fsm_data['region']}\n"
-        f"📦 Paket: {fsm_data['packet']}\n"
-        f"🔑 Ma'lumotlar: `{fsm_data['credentials']}`"
-    )
-    await bot.send_photo(chat_id=ADMIN_ID, photo=message.photo[-1].file_id, caption=admin_text, reply_markup=builder.as_markup(), parse_mode="Markdown")
+    platforma = fsm_data.get('platform', 'Android')
+    region_nomi = fsm_data.get('region', "O'yin ichidan")
+    paket_nomi = fsm_data.get('packet', 'Coins')
+    login_parol = fsm_data.get('credentials', 'Kiritilmagan')
+    
+    admin_text = f"""🚨 **YANGI BUYURTMA #{order_id}**
+
+👤 Mijoz: {message.from_user.full_name} (ID: {message.from_user.id})
+📱 Platforma: {platforma}
+🌍 Region: {region_nomi}
+📦 Paket: {paket_nomi}
+🔑 Ma'lumotlar: `{login_parol}`"""
+    
+    try:
+        await bot.send_photo(
+            chat_id=1678146043,
+            photo=message.photo[-1].file_id,
+            caption=admin_text,
+            reply_markup=builder.as_markup()
+        )
+    except Exception as e:
+        logging.error(f"Adminga yuborishda xato: {e}")
+        
     await state.clear()
 
 def get_next_order_id():
@@ -338,7 +353,7 @@ def get_next_order_id():
 # --- ADMIN PROCESS ---
 @dp.callback_query(F.data.startswith("adm_pay_ok:"))
 async def admin_payment_ok(callback: types.CallbackQuery):
-    order_id = callback.data.split(":")
+    order_id = callback.data.split(":", 1)[1]
     
     builder = InlineKeyboardBuilder()
     builder.button(text="🎉 Buyurtma bajarildi", callback_data=f"adm_done:{order_id}")
@@ -354,7 +369,7 @@ async def admin_payment_ok(callback: types.CallbackQuery):
 
 @dp.callback_query(F.data.startswith("adm_done:"))
 async def admin_order_done(callback: types.CallbackQuery):
-    order_id = callback.data.split(":")
+    order_id = callback.data.split(":", 1)[1]
     data = load_data()
     order = data["orders"].get(str(order_id))
     
@@ -374,7 +389,7 @@ async def admin_order_done(callback: types.CallbackQuery):
                 data["users"][str(referrer_id)]["bonus"] += 10
                 data["users"][str(referrer_id)]["referrals_count"] += 1
                 try:
-                    await bot.send_message(int(referrer_id), f"🎁 Do'stingiz xarid qildi! Sizga +10 Coins bonus berildi.")
+                    await bot.send_message(chat_id=int(referrer_id), text="🎁 Do'stingiz xarid qildi! Sizga +10 Coins bonus berildi.")
                 except Exception:
                     pass
                     
@@ -382,7 +397,7 @@ async def admin_order_done(callback: types.CallbackQuery):
             if user_id not in data["tournament"]:
                 data["tournament"].append(user_id)
                 if len(data["tournament"]) == 64:
-                    await bot.send_message(ADMIN_ID, "🏆 DIQQAT! Turnir ishtirokchilari 64 taga yetdi, setkani shakllantiring.")
+                    await bot.send_message(chat_id=ADMIN_ID, text="🏆 DIQQAT! Turnir ishtirokchilari 64 taga yetdi, setkani shakllantiring.")
                     data["tournament"] = []
         
         save_data(data)
@@ -403,7 +418,7 @@ async def admin_order_done(callback: types.CallbackQuery):
 
 @dp.callback_query(F.data.startswith("adm_rej:"))
 async def admin_order_reject(callback: types.CallbackQuery):
-    order_id = callback.data.split(":")
+    order_id = callback.data.split(":", 1)[1]
     data = load_data()
     order = data["orders"].get(str(order_id))
     
@@ -420,7 +435,7 @@ async def admin_order_reject(callback: types.CallbackQuery):
 # --- SHARH QOBUL QILISH VA KANALGA JOYLASHTIRISH ---
 @dp.callback_query(F.data.startswith("write_review:"))
 async def start_review(callback: types.CallbackQuery, state: FSMContext):
-    order_id = callback.data.split(":")
+    order_id = callback.data.split(":", 1)[1]
     await state.update_data(review_order_id=order_id)
     await state.set_state(BotStates.writing_review)
     await callback.message.answer("Xizmatimiz haqidagi fikringizni (sharhingizni) yozib yuboring:")
@@ -461,4 +476,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-    
