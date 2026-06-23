@@ -108,7 +108,7 @@ async def cmd_reviews_info(message: types.Message):
 
 @dp.message(F.text == "👨‍💻 Admin / Yordam")
 async def cmd_support(message: types.Message):
-    await message.answer("👨‍💻 Har qanday savollar yoki muammolar bo'yicha adminga murojaat qiling: @Xusanova_M")
+    await message.answer("👨‍💻 Har qanday savollar yoki muammolar bo'yicha adminga murojaat qiling: @notanish7005")
 
 # --- 🎁 BONUSLARIM VA REFERAL TIZIMI ---
 @dp.message(F.text == "🎁 Bonuslarim")
