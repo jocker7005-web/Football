@@ -447,16 +447,20 @@ async def process_review(message: types.Message, state: FSMContext):
     order_id = fsm_data.get("review_order_id")
     
     bot_info = await bot.get_me()
-    channel_msg = (
-        f"🌟 **YANGI SHARH (OTZIV)**\n\n"
-        f"📦 **Buyurtma raqami:** #{order_id}\n"
-        f"👤 **Mijoz:** {message.from_user.mention}\n"
-        f"💬 **Sharh:** \"{message.text}\"\n\n"
-        f"🤖 @{bot_info.username}"
-    )
+    channel_msg = f"""🌟 **YANGI SHARH (OTZIV)**
+
+📦 **Buyurtma raqami:** #N{order_id}
+👤 **Mijoz:** {message.from_user.mention}
+💬 **Sharh:** "{message.text}"
+
+🤖 @{bot_info.username}"""
     
     try:
-        await bot.send_message(chat_id=REVIEWS_CHANNEL, text=channel_msg)
+        await bot.send_message(
+            chat_id=REVIEWS_CHANNEL, 
+            text=channel_msg,
+            parse_mode="Markdown"
+        )
         await message.answer("✅ Rahmat! Sharhingiz buyurtma raqamingiz bilan bir xil tartibda rasmiy kanalimizga joylashtirildi. 🤝")
     except Exception:
         await message.answer("Sharh uchun rahmat! (Botni kanalga admin qilib tayinlashni unutmang)")
