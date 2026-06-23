@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.INFO)
 BOT_TOKEN = "8893476065:AAHoM3p_1HMQKa0TqliGL4O5kHdgJXRIOMU"
 ADMIN_ID = 1678146043
 KARTA = "9860 3501 0897 5409 (Xusanova M)"
-REVIEWS_CHANNEL = "@https://t.me/coinssharhlar"
+REVIEWS_CHANNEL = "https://t.me/coinssharhlar"
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
