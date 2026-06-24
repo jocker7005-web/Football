@@ -530,41 +530,39 @@ async def start_review(callback: types.CallbackQuery, state: FSMContext):
 async def process_review(message: types.Message, state: FSMContext):
     fsm_data = await state.get_data()
     order_id = fsm_data.get("order_id")
-
-    # 1. Bazani ochamiz va sharhni buyurtma ichiga yozamiz
+    
     data = load_data()
     order = data["orders"].get(str(order_id))
     
+    # Ism o'rniga nuqta yoki bo'shliq bo'lsa, username dan foydalanamiz
+    mijoz_user = f"@{message.from_user.username}" if message.from_user.username else message.from_user.full_name
+    if mijoz_user == ".":
+        mijoz_user = f"Mijoz ({message.from_user.id})"
+
     if order:
         order["review"] = message.text
         save_data(data)
         
-        # 2. Buyurtmaning barcha eski ma'lumotlarini bazadan qayta tiklaymiz
         details = order.get("details", {})
         platforma = details.get('platform', 'Android')
         region_nomi = details.get('region', "O'yin ichidan")
         paket_nomi = details.get('packet', 'Coins')
     else:
-        platforma, region_nomi, paket_nomi = "Nomalum", "Nomalum", "Coins"
+        platforma, region_nomi, paket_nomi = "Android", "O'yin ichidan (Android)", "Coins"
 
     bot_info = await bot.get_me()
     
-    # 3. Guruhga boradigan va sharh bilan buyurtmani birlashtirgan yakuniy matn
-    channel_msg = f"""🎉 **XARID VA SHARH MUVAFFAQIYATLI YAKUNLANDI!**
-
-📦 **Buyurtma raqami:** #N{order_id}
-👤 **Mijoz:** {message.from_user.full_name}
-📱 **Platforma:** {platforma}
-🌍 **Region:** {region_nomi}
-💰 **Sotib olingan paket:** {paket_nomi}
-
-💬 **Mijoz qoldirgan sharh (Otziv):**
-"{message.text}"
-
-🤖 @{bot_info.username}"""
+    channel_msg = f"🎉 **XARID VA SHARH MUVAFFAQIYATLI YAKUNLANDI!**\n\n" \
+                  f"📦 **Buyurtma raqami:** #N{order_id}\n" \
+                  f"👤 **Mijoz:** {mijoz_user}\n" \
+                  f"📱 **Platforma:** {platforma}\n" \
+                  f"🌍 **Region:** {region_nomi}\n" \
+                  f"💰 **Sotib olingan paket:** {paket_nomi}\n\n" \
+                  f"💬 **Mijoz qoldirgan sharh (Otziv):**\n" \
+                  f"\"{message.text}\"\n\n" \
+                  f"🤖 @{bot_info.username}"
     
     try:
-        # Guruhga (guruh yuserneymiga) to'liq ma'lumot yetib boradi
         await bot.send_message(
             chat_id="@coinssharhlar", 
             text=channel_msg,
@@ -572,11 +570,15 @@ async def process_review(message: types.Message, state: FSMContext):
         )
         await message.answer("✅ Rahmat! Sharhingiz buyurtma ma'lumotlari bilan birga guruhimizga muvaffaqiyatli joylashtirildi. 🤝")
     except Exception as e:
-        logging.error(f"Guruhga xabar yuborishda xato: {e}")
-        await message.answer("Sharh uchun rahmat!")
+        logging.error(f"Guruhga sharh yuborishda xato: {e}")
+        # Agar Markdown xato bersa, oddiy matnda yuborishga urinadi
+        try:
+            await bot.send_message(chat_id="@coinssharhlar", text=channel_msg.replace("**", "").replace("`", ""))
+            await message.answer("✅ Rahmat! Sharhingiz guruhga joylashtirildi.")
+        except Exception:
+            await message.answer("Sharh uchun rahmat!")
         
     await state.clear()
-
 
 @dp.message(F.text == "🛠 Admin Panel")
 async def cmd_admin_panel(message: types.Message):
