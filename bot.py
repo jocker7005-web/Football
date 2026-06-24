@@ -12,7 +12,7 @@ from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 logging.basicConfig(level=logging.INFO)
 
 # --- MAXFIY MA'LUMOTLAR VA KONSTANTALAR ---
-BOT_TOKEN = "8893476065:AAFseE8gnPCvfV_GALln-PCvK-tz7Wihn40"
+BOT_TOKEN = "8893476065:AAEXYibg565AuSm7MAxBWuxuAkShWJLrOVg"
 ADMIN_ID = 1678146043
 KARTA = "9860 3501 0897 5409 (Xusanova M)"
 MAIN_CHANNEL = "@coinssharhlar"
