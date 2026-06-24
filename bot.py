@@ -555,10 +555,10 @@ async def process_review(message: types.Message, state: FSMContext):
 async def cmd_admin_panel(message: types.Message):
     if message.from_user.id != 1678146043: return
 
-        data = load_data()
-        total_users = len(data.get("users", {}))
-        total_orders = len(data.get("orders", {}))
-        await message.answer(f"🛠 **Admin Panel**\n\n👥 Jami foydalanuvchilar: {total_users}\n📦 Jami buyurtmalar: {total_orders}")
+    data = load_data()
+    total_users = len(data.get("users", {}))
+    total_orders = len(data.get("orders", {}))
+    await message.answer(f"🛠 **Admin Panel**\n\n👥 Jami foydalanuvchilar: {total_users}\n📦 Jami buyurtmalar: {total_orders}")
 
 async def main():
     await dp.start_polling(bot)
