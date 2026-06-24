@@ -355,7 +355,6 @@ async def admin_order_done(callback: types.CallbackQuery):
         order["status"] = "Bajarildi ✅"
         user_id = order["user_id"]
         coin_amount = order["details"].get("coin_amount", 0)
-        
         cashback = coin_amount // 100
         init_user(user_id)
         data["users"][str(user_id)]["bonus"] += cashback
@@ -364,26 +363,24 @@ async def admin_order_done(callback: types.CallbackQuery):
             data["users"][str(user_id)]["has_purchased"] = True
             referrer_id = data["users"][str(user_id)]["referred_by"]
             if referrer_id and str(referrer_id) in data["users"]:
-                data["users"][str(referrer_id)]["bonus"] += 50 # +50 Coins Referal Bonus!
+                data["users"][str(referrer_id)]["bonus"] += 50
                 data["users"][str(referrer_id)]["referrals_count"] += 1
-                try:
-                    await bot.send_message(chat_id=int(referrer_id), text="🎁 Do'stingiz xarid qildi! Sizga +50 Coins bonus berildi.")
-                except Exception:
-                    pass
         save_data(data)
         
-        builder = InlineKeyboardBuilder()
-        builder.button(text="✍️ Sharh (Otziv) qoldirish", callback_data=f"write_review {order_id}")
+        # --- GURUHGA "BAJARILDI" XABARINI VA MIJOZ CHEKINI YUBORISH ---
+        try:
+            guruh_text = f"✅ **BUYURTMA MUVAFFAQIYATLI BAJARILDI!**\n\n📦 **Buyurtma raqami:** #N{order_id}\n💰 **Paket:** {order['details'].get('packet', 'Coins')}\n📊 **Holati:** Muvaffaqiyatli yuklandi 🟢"
+            # Admin xabaridagi rasmni (chekni) guruhga nusxalab yuboradi
+            await bot.send_photo(chat_id=MAIN_CHANNEL, photo=callback.message.photo[-1].file_id, caption=guruh_text)
+        except Exception:
+            pass
         
-        await bot.send_message(
-            chat_id=user_id,
-            text=f"🎉 **Buyurtmangiz #N{order_id} muvaffaqiyatli bajarildi!**\nCoins akkauntingizga yuklandi.\n"
-                 f"Xarid uchun +{cashback} bonus coin hamyoningizga qo'shildi.\n\n"
-                 f"Iltimos, quyidagi tugma orqali xizmatimiz haqica sharh qoldiring 👇",
-            reply_markup=builder.as_markup()
-        )
-        await callback.message.edit_caption(caption=callback.message.caption + f"\n\n🟢 **STATUS: #N{order_id} BAJARILDI VA MIJOZGA XABAR BORDI**")
+        builder = InlineKeyboardBuilder()
+        builder.button(text="✍️ Sharh qoldirish", callback_data=f"write_review:{order_id}")
+        await bot.send_message(chat_id=user_id, text=f"🎉 **Buyurtmangiz #N{order_id} bajarildi!**\nSharh qoldiring 👇", reply_markup=builder.as_markup())
+        await callback.message.edit_caption(caption=callback.message.caption + f"\n\n🟢 STATUS: BAJARILDI")
     await callback.answer()
+
 
 @dp.callback_query(F.data.startswith("adm_rej:"))
 async def admin_order_reject(callback: types.CallbackQuery):
