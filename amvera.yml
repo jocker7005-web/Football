@@ -5,4 +5,5 @@ build:
   requirements: requirements.txt
 run:
   script: bot.py
-  
+run:
+  script: bot.py
