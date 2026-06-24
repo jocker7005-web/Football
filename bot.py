@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.INFO)
 BOT_TOKEN = "8893476065:AAHTxgo0fwTnnnU44jwpKLPvk7m5MjVHf0g"
 ADMIN_ID = 1678146043
 KARTA = "9860 3501 0897 5409 (Xusanova M)"
-MAIN_CHANNEL = "@levelGroup_eFHub"
+MAIN_CHANNEL = "@coinssharhlar"
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
@@ -159,10 +159,7 @@ async def cmd_guide(message: types.Message):
 
 @dp.message(F.text == "⭐ Sharhlar")
 async def cmd_reviews_info(message: types.Message):
-    if not await check_subscription(message.from_user.id):
-        await message.answer("❌ Avval kanalimizga a'zo bo'ling!", reply_markup=get_sub_keyboard())
-        return
-    await message.answer(f"⭐ Barcha muvaffaqiyatli xaridlar va mijozlarimiz sharhlari avtomatik tarzda rasmiy kanalimizga joylab boriladi: {MAIN_CHANNEL}")
+    await message.answer(f"⭐ Barcha muvaffaqiyatli xaridlar va mijozlarimiz sharhlari avtomatik tarzda rasmiy guruhimizga joylab boriladi: {MAIN_CHANNEL}")
 
 @dp.message(F.text == "👨‍💻 Admin / Yordam")
 async def cmd_support(message: types.Message):
@@ -228,12 +225,26 @@ async def cmd_suggestion(message: types.Message, state: FSMContext):
 
 @dp.message(BotStates.writing_suggestion, F.text)
 async def process_suggestion(message: types.Message, state: FSMContext):
-    await bot.send_message(
-        chat_id=ADMIN_ID,
-        text=f"✍️ **YANGI TAKLIF/SHIKOYAT**\n\nKimdan: {message.from_user.mention}\nID: {message.from_user.id}\n\nMatn:\n{message.text}"
-    )
+    admin_msg = f"""✍️ **YANGI TAKLIF / SHIKOYAT**
+
+👤 Kimdan: {message.from_user.full_name}
+🆔 ID: `{message.from_user.id}`
+
+📝 Matn:
+"{message.text}" """
+
+    try:
+        await bot.send_message(
+            chat_id=ADMIN_ID,
+            text=admin_msg,
+            parse_mode="Markdown"
+        )
+        await message.answer("✅ Taklifingiz muvaffaqiyatli adminga yetkazildi. Rahmat!")
+    except Exception as e:
+        logging.error(f"Adminga taklif yuborishda xato: {e}")
+        await message.answer("✅ Taklifingiz qabul qilindi. Rahmat!")
+        
     await state.clear()
-    await message.answer("✅ Taklifingiz muvaffaqiyatli adminga yetkazildi. Rahmat!")
 
 # --- 📦 MENING BUYURTMALARIM (TARIXI) ---
 @dp.message(F.text == "📦 Mening buyurtmalarim")
@@ -536,10 +547,11 @@ async def process_review(message: types.Message, state: FSMContext):
     
     try:
         await bot.send_message(
-            chat_id="@levelGroup_eFHub", 
+            chat_id="@coinssharhlar", 
             text=channel_msg,
             parse_mode="Markdown"
         )
+        
         await message.answer("✅ Rahmat! Sharhingiz buyurtmangiz ichiga qo'shildi va kanalga joylashtirildi. 🤝")
     except Exception:
         await message.answer("Sharh uchun rahmat!")
