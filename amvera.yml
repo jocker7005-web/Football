@@ -5,6 +5,7 @@ build:
   requirements: requirements.txt
 run:
   script: bot.py
-  persistence:
-    data:
-      path: /data
+persistence:
+  data:
+    path: /data
+    
