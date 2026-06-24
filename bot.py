@@ -21,7 +21,7 @@ MAIN_CHANNEL = "@coinssharhlar"
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
 
-DATA_FILE = "/data/bot_data.json"
+DATA_FILE = "bot_data.json"
 
 # --- MA'LUMOTLAR BAZASI (JSON) FUNKSIYALARI ---
 def load_data():
