@@ -183,7 +183,7 @@ async def cmd_my_orders(message: types.Message):
 async def cmd_tournament(message: types.Message):
     data = load_data()
     count = len(data.get("tournament", []))
-    await message.answer(f"🏆 **Katta eFootball Turniri (Slot: {count}/64)**\n\n📌 **Qoida:** 5700 va undan yuqori Coins sotib olgan har 64 ta ishtirokchi o'rtasida 3 000 000 so'mlik katta turnir start oladi!")
+    await message.answer(f"🏆 **Katta eFootball Turniri...", parse_mode="Markdown")
 
 # --- ✍️ TAKLIF QOLDIRISH ---
 @dp.message(F.text == "✍️ Taklif qoldirish")
@@ -434,9 +434,10 @@ async def process_review(message: types.Message, state: FSMContext):
     channel_msg = f"🎉 **XARID VA SHARH MUVAFFAQIYATLI YAKUNLANDI!**\n\n📦 **Buyurtma raqami:** #N{order_id}\n👤 **Mijoz:** {mijoz_user}\n📱 **Platforma:** {platforma}\n🌍 **Region:** {region_nomi}\n💰 **Sotib olingan paket:** {paket_nomi}\n\n💬 **Mijoz qoldirgan sharh (Otziv):**\n\"{message.text}\"\n\n🤖 @{bot_info.username}"
     
     try:
-        # Sharh xaridor barcha ma'lumotlari bilan bitta post bo'lib guruhga tushadi!
-        await bot.send_message(chat_id=MAIN_CHANNEL, text=channel_msg, parse_mode="Markdown")
-        await message.answer("✅ Rahmat! Sharhingiz xarid tafsilotlari bilan birga rasmiy guruhimizga joylashtirildi. 🤝")
+        # parse_mode o'chirildi, shunda xabarlar xatosiz va tezkor yetib boradi
+        await bot.send_message(chat_id="@coinssharhlar", text=channel_msg)
+        await message.answer("✅ Rahmat! Sharhingiz guruhga joylashtirildi. 🤝")
+
     except Exception:
         await message.answer("Sharh uchun rahmat!")
     await state.clear()
