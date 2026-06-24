@@ -519,7 +519,7 @@ async def admin_order_reject(callback: types.CallbackQuery):
 # --- SHARH QOBUL QILISH VA KANALGA JOYLASHTIRISH ---
 @dp.callback_query(F.data.startswith("write_review:"))
 async def start_review(callback: types.CallbackQuery, state: FSMContext):
-    order_id = callback.data.split(":")
+    order_id = callback.data.split(" ")[-1]
     await state.set_state(BotStates.writing_review)
     # Buyurtma raqamini FSMContext ichidagi qat'iy ma'lumot qilib saqlaymiz
     await state.update_data(order_id=order_id)
