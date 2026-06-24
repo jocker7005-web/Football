@@ -125,13 +125,6 @@ async def cmd_start(message: types.Message):
                 data["users"][str(user_id)]["referred_by"] = referrer_id
                 save_data(data)
 
-    if not await check_subscription(user_id):
-        await message.answer(
-            f"❌ Kechirasiz, botdan foydalanishdan oldin {MAIN_CHANNEL} kanalimizga a'zo bo'lishingiz shart!",
-            reply_markup=get_sub_keyboard()
-        )
-        return
-
     await message.answer(
         f"Salom {message.from_user.full_name}! Efootball Coins botiga xush kelibsiz!\nKerakli bo'limni tanlang:",
         reply_markup=get_main_menu(user_id)
@@ -299,9 +292,7 @@ async def cmd_tournament(message: types.Message):
 # --- 🛒 ANDROID COINS XARID BOSQICHI ---
 @dp.message(F.text == "🛒 Android Coins")
 async def cmd_android_coins(message: types.Message, state: FSMContext):
-    if not await check_subscription(message.from_user.id):
-        await message.answer("❌ Avval kanalimizga a'zo bo'ling!", reply_markup=get_sub_keyboard())
-        return
+
     prices = [
         "260 coins -> 40.000 so'm", "300 coins -> 45.000 so'm", "390 coins -> 60.000 so'm",
         "550 coins -> 70.000 so'm", "750 coins -> 95.000 so'm", "1040 coins -> 125.000 so'm",
