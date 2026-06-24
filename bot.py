@@ -81,12 +81,13 @@ async def check_subscription(user_id: int) -> bool:
     if user_id == ADMIN_ID:
         return True
     try:
-        member = await bot.get_chat_member(chat_id=MAIN_CHANNEL, user_id=user_id)
+        member = await bot.get_chat_member(chat_id="@levelGroup_eFHub", user_id=user_id)
         if member.status in ["creator", "administrator", "member"]:
             return True
         return False
-    except Exception:
-        return False
+    except Exception as e:
+        logging.error(f"Obunani tekshirishda xato: {e}")
+        return True
 
 # --- MAJBURIY OBUNA INLINE TUGMASI ---
 def get_sub_keyboard():
