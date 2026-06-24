@@ -8,14 +8,15 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
+from aiogram.exceptions import TelegramBadRequest
 
 logging.basicConfig(level=logging.INFO)
 
 # --- MAXFIY MA'LUMOTLAR VA KONSTANTALAR ---
-BOT_TOKEN = "8893476065:AAHoM3p_1HMQKa0TqliGL4O5kHdgJXRIOMU"
+BOT_TOKEN = "8893476065:AAFseE8gnPCvfV_GALln-PCvK-tz7Wihn40"
 ADMIN_ID = 1678146043
 KARTA = "9860 3501 0897 5409 (Xusanova M)"
-REVIEWS_CHANNEL = "https://t.me/coinssharhlar"
+MAIN_CHANNEL = "@levelGroup_eFHub"
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
@@ -28,11 +29,7 @@ def load_data():
         return {"last_id": 0, "orders": {}, "users": {}, "tournament": []}
     try:
         with open(DATA_FILE, "r") as f:
-            data = json.load(f)
-            # Agar eski vaqt formati qolib ketgan bo'lsa, bazani tozalab #N1 ga o'tkazadi
-            if "last_id" in data and len(str(data["last_id"])) > 4:
-                return {"last_id": 0, "orders": {}, "users": {}, "tournament": []}
-            return data
+            return json.load(f)
     except Exception:
         return {"last_id": 0, "orders": {}, "users": {}, "tournament": []}
 
@@ -52,6 +49,24 @@ def init_user(user_id, username=None):
         }
         save_data(data)
 
+def get_next_order_id():
+    data = load_data()
+    orders = data.get("orders", {})
+    if orders:
+        try:
+            existing_ids = [int(x) for x in orders.keys() if x.isdigit()]
+            if existing_ids:
+                new_id = max(existing_ids) + 1
+            else:
+                new_id = data.get("last_id", 0) + 1
+        except Exception:
+            new_id = data.get("last_id", 0) + 1
+    else:
+        new_id = data.get("last_id", 0) + 1
+    data["last_id"] = new_id
+    save_data(data)
+    return new_id
+
 # --- FSM HOLATLARI ---
 class BotStates(StatesGroup):
     choosing_android_coins = State()
@@ -61,6 +76,26 @@ class BotStates(StatesGroup):
     sending_receipt = State()
     writing_review = State()
     writing_suggestion = State()
+# --- MAJBURIY OBUNA TEKSHIRISH FUNKSIYASI ---
+async def check_subscription(user_id: int) -> bool:
+    if user_id == ADMIN_ID:
+        return True
+    try:
+        member = await bot.get_chat_member(chat_id=MAIN_CHANNEL, user_id=user_id)
+        if member.status in ["creator", "administrator", "member"]:
+            return True
+        return False
+    except Exception:
+        return False
+
+# --- MAJBURIY OBUNA INLINE TUGMASI ---
+def get_sub_keyboard():
+    builder = InlineKeyboardBuilder()
+    builder.button(text="Kanalga a'zo bo'lish 📢", url=f"https://t.me{MAIN_CHANNEL.replace('@', '')}")
+    builder.button(text="Tekshirish 🔄", callback_data="sub_check")
+    builder.adjust(1)
+    return builder.as_markup()
+
 # --- ASOSIY MENYU (REPLY MENYU) ---
 def get_main_menu(user_id):
     builder = ReplyKeyboardBuilder()
@@ -89,14 +124,36 @@ async def cmd_start(message: types.Message):
                 data["users"][str(user_id)]["referred_by"] = referrer_id
                 save_data(data)
 
+    if not await check_subscription(user_id):
+        await message.answer(
+            f"❌ Kechirasiz, botdan foydalanishdan oldin {MAIN_CHANNEL} kanalimizga a'zo bo'lishingiz shart!",
+            reply_markup=get_sub_keyboard()
+        )
+        return
+
     await message.answer(
         f"Salom {message.from_user.full_name}! Efootball Coins botiga xush kelibsiz!\nKerakli bo'limni tanlang:",
         reply_markup=get_main_menu(user_id)
     )
 
+# --- INLINE OBUNA TEKSHIRISH CALLBACK ---
+@dp.callback_query(F.data == "sub_check")
+async def process_sub_check(callback: types.CallbackQuery):
+    user_id = callback.from_user.id
+    if await check_subscription(user_id):
+        await callback.message.delete()
+        await callback.message.answer(
+            "✅ Rahmat! Obuna tasdiqlandi. Botdan to'liq foydalanishingiz mumkin:",
+            reply_markup=get_main_menu(user_id)
+        )
+    else:
+        await callback.answer("❌ Siz hali kanalga a'zo bo'lmadingiz!", show_alert=True)
 # --- AXBOROT BERUVCHI TUGMALAR ---
 @dp.message(F.text == "📖 Qo'llanma")
 async def cmd_guide(message: types.Message):
+    if not await check_subscription(message.from_user.id):
+        await message.answer("❌ Avval kanalimizga a'zo bo'ling!", reply_markup=get_sub_keyboard())
+        return
     await message.answer(
         "📖 **Coins sotib olish qo'llanmasi:**\n\n"
         "1️⃣ Kerakli bo'limni tanlang (Android yoki Region).\n"
@@ -108,16 +165,25 @@ async def cmd_guide(message: types.Message):
 
 @dp.message(F.text == "⭐ Sharhlar")
 async def cmd_reviews_info(message: types.Message):
-    await message.answer("⭐ Barcha muvaffaqiyatli xaridlar va mijozlarimiz sharhlari avtomatik tarzda rasmiy kanalimizga joylab boriladi!")
+    if not await check_subscription(message.from_user.id):
+        await message.answer("❌ Avval kanalimizga a'zo bo'ling!", reply_markup=get_sub_keyboard())
+        return
+    await message.answer(f"⭐ Barcha muvaffaqiyatli xaridlar va mijozlarimiz sharhlari avtomatik tarzda rasmiy kanalimizga joylab boriladi: {MAIN_CHANNEL}")
 
 @dp.message(F.text == "👨‍💻 Admin / Yordam")
 async def cmd_support(message: types.Message):
+    if not await check_subscription(message.from_user.id):
+        await message.answer("❌ Avval kanalimizga a'zo bo'ling!", reply_markup=get_sub_keyboard())
+        return
     await message.answer("👨‍💻 Har qanday savollar yoki muammolar bo'yicha adminga murojaat qiling: @jocker7005")
 
-# --- 🎁 BONUSLARIM VA REFERAL TIZIMI ---
+# --- 🎁 BONUSLARIM VA REFERAL TIZIMI (50 COINS) ---
 @dp.message(F.text == "🎁 Bonuslarim")
 async def cmd_bonuses(message: types.Message):
     user_id = message.from_user.id
+    if not await check_subscription(user_id):
+        await message.answer("❌ Avval kanalimizga a'zo bo'ling!", reply_markup=get_sub_keyboard())
+        return
     init_user(user_id, message.from_user.username)
     data = load_data()
     user_info = data["users"][str(user_id)]
@@ -130,7 +196,7 @@ async def cmd_bonuses(message: types.Message):
         f"💰 Balans: {user_info['bonus']} Coins\n"
         f"👥 Taklif qilingan do'stlar: {user_info['referrals_count']} ta\n\n"
         f"🔗 Sizning taklif havolangiz:\n{ref_link}\n\n"
-        f"ℹ️ *Har bir taklif qilgan do'stingiz botdan birinchi marta Coins sotib olganda sizga 10 Coins beriladi. "
+        f"ℹ️ *Har bir taklif qilgan do'stingiz botdan birinchi marta Coins sotib olganda sizga 50 Coins beriladi. "
         f"Shuningdek o'z xaridlaringizdan ham keshbek qo'shiladi. Minimal yechish: 600 Coins.*"
     )
     
@@ -156,9 +222,13 @@ async def process_withdraw(callback: types.CallbackQuery):
     else:
         await callback.answer("Mablag' yetarli emas!", show_alert=True)
     await callback.answer()
+
 # --- ✍️ TAKLIF QOLDIRISH ---
 @dp.message(F.text == "✍️ Taklif qoldirish")
 async def cmd_suggestion(message: types.Message, state: FSMContext):
+    if not await check_subscription(message.from_user.id):
+        await message.answer("❌ Avval kanalimizga a'zo bo'ling!", reply_markup=get_sub_keyboard())
+        return
     await state.set_state(BotStates.writing_suggestion)
     await message.answer("Fikr, taklif yoki shikoyatingizni matn ko'rinishida yozib yuboring:")
 
@@ -171,10 +241,13 @@ async def process_suggestion(message: types.Message, state: FSMContext):
     await state.clear()
     await message.answer("✅ Taklifingiz muvaffaqiyatli adminga yetkazildi. Rahmat!")
 
-# --- 📦 MENING BUYURTMALARIM (TARIX) ---
+# --- 📦 MENING BUYURTMALARIM (TARIXI) ---
 @dp.message(F.text == "📦 Mening buyurtmalarim")
 async def cmd_my_orders(message: types.Message):
     user_id = message.from_user.id
+    if not await check_subscription(user_id):
+        await message.answer("❌ Avval kanalimizga a'zo bo'ling!", reply_markup=get_sub_keyboard())
+        return
     data = load_data()
     orders = data.get("orders", {})
     
@@ -189,16 +262,19 @@ async def cmd_my_orders(message: types.Message):
         details = o_data.get("details", {})
         status = o_data.get("status", "Kutilmoqda ⏳")
         text += (
-            f"🔹 **Buyurtma #{o_id}**\n"
+            f"🔹 **Buyurtma #N{o_id}**\n"
             f"🛒 Turi: {details.get('platform', 'Nomalum')}\n"
             f"💰 Paket: {details.get('packet', 'Nomalum')}\n"
             f"📊 Holati: {status}\n\n"
         )
     await message.answer(text)
 
-# --- 🏆 TURNIR BO'LIMI (64 SLOT TIZIMI) ---
+# --- 🏆 TURNIR BO'LIMI ---
 @dp.message(F.text == "🏆 Turnir")
 async def cmd_tournament(message: types.Message):
+    if not await check_subscription(message.from_user.id):
+        await message.answer("❌ Avval kanalimizga a'zo bo'ling!", reply_markup=get_sub_keyboard())
+        return
     data = load_data()
     participants = data.get("tournament", [])
     count = len(participants)
@@ -222,6 +298,9 @@ async def cmd_tournament(message: types.Message):
 # --- 🛒 ANDROID COINS XARID BOSQICHI ---
 @dp.message(F.text == "🛒 Android Coins")
 async def cmd_android_coins(message: types.Message, state: FSMContext):
+    if not await check_subscription(message.from_user.id):
+        await message.answer("❌ Avval kanalimizga a'zo bo'ling!", reply_markup=get_sub_keyboard())
+        return
     prices = [
         "260 coins -> 40.000 so'm", "300 coins -> 45.000 so'm", "390 coins -> 60.000 so'm",
         "550 coins -> 70.000 so'm", "750 coins -> 95.000 so'm", "1040 coins -> 125.000 so'm",
@@ -231,26 +310,29 @@ async def cmd_android_coins(message: types.Message, state: FSMContext):
     ]
     builder = InlineKeyboardBuilder()
     for p in prices:
-        builder.button(text=p, callback_data=f"and_p:{p}")
+        coin_num = p.split()[0]
+        builder.button(text=p, callback_data=f"and_p:{coin_num}:{p}")
     builder.adjust(1)
     await state.set_state(BotStates.choosing_android_coins)
     await message.answer("Android uchun kerakli paketni tanlang (O'yinga kirib yuklanadi):", reply_markup=builder.as_markup())
 
 @dp.callback_query(F.data.startswith("and_p:"), BotStates.choosing_android_coins)
 async def process_android_choice(callback: types.CallbackQuery, state: FSMContext):
-    packet = callback.data.split(":", 1)[1]
-    raw_coin = "".join(filter(str.isdigit, packet.split("->")[0].replace(".", "")))
-    coin_amount = int(raw_coin) if raw_coin else 0
+    parts = callback.data.split(":", 2)
+    coin_amount = int(parts[1])
+    packet = parts[2]
 
     await state.update_data(platform="Android", packet=packet, region="O'yin ichidan (Android)", coin_amount=coin_amount)
     await callback.message.delete()
     await state.set_state(BotStates.entering_credentials)
     await callback.message.answer("O'yinga kirish uchun Konami ID va Parolni kiriting:\n\n*Misol:* info@gmail.com / parol123")
     await callback.answer()
-
 # --- 🌍 REGIONLAR UCHUN COINS XARID BOSQICHI (BARCHA 13 TA DAVLAT) ---
 @dp.message(F.text == "🌍 Regionlar uchun Coins")
 async def cmd_region_coins(message: types.Message, state: FSMContext):
+    if not await check_subscription(message.from_user.id):
+        await message.answer("❌ Avval kanalimizga a'zo bo'ling!", reply_markup=get_sub_keyboard())
+        return
     regions = [
         "Япония 🇯🇵", "ОАЭ 🇦🇪", "Египет 🇪🇬", "Канада 🇨🇦", 
         "Мексика 🇲🇽", "США 🇺🇸", "Саудовская Аравия 🇸🇦", "Бразилия 🇧🇷", 
@@ -262,6 +344,7 @@ async def cmd_region_coins(message: types.Message, state: FSMContext):
     builder.adjust(2)
     await state.set_state(BotStates.choosing_region)
     await message.answer("Iltimos, akkauntingiz ro'yxatdan o'tgan regionni tanlang:", reply_markup=builder.as_markup())
+
 @dp.callback_query(F.data.startswith("reg_set:"), BotStates.choosing_region)
 async def process_region_choice(callback: types.CallbackQuery, state: FSMContext):
     region = callback.data.split(":", 1)[1]
@@ -275,7 +358,8 @@ async def process_region_choice(callback: types.CallbackQuery, state: FSMContext
     ]
     builder = InlineKeyboardBuilder()
     for p in prices:
-        builder.button(text=p, callback_data=f"reg_p:{p}")
+        coin_num = p.split()[0]
+        builder.button(text=p, callback_data=f"reg_p:{coin_num}:{p}")
     builder.adjust(1)
     await state.set_state(BotStates.choosing_region_coins)
     await callback.message.edit_text(f"Tanlangan region: {region}\nCoins paketini tanlang:", reply_markup=builder.as_markup())
@@ -283,9 +367,9 @@ async def process_region_choice(callback: types.CallbackQuery, state: FSMContext
 
 @dp.callback_query(F.data.startswith("reg_p:"), BotStates.choosing_region_coins)
 async def process_region_packet(callback: types.CallbackQuery, state: FSMContext):
-    packet = callback.data.split(":", 1)[1]
-    raw_coin = "".join(filter(str.isdigit, packet.split("->")[0].replace(".", "")))
-    coin_amount = int(raw_coin) if raw_coin else 0
+    parts = callback.data.split(":", 2)
+    coin_amount = int(parts[1])
+    packet = parts[2]
 
     await state.update_data(packet=packet, coin_amount=coin_amount)
     await callback.message.delete()
@@ -315,7 +399,7 @@ async def process_receipt(message: types.Message, state: FSMContext):
     }
     save_data(data)
     
-    await message.answer(f"✅ Rahmat! Sizning buyurtmangiz #{order_id} raqami bilan qabul qilindi. Admin tekshirmoqda.")
+    await message.answer(f"✅ Rahmat! Sizning buyurtmangiz #N{order_id} raqami bilan qabul qilindi. Admin tekshirmoqda.")
     
     builder = InlineKeyboardBuilder()
     builder.button(text="✅ To'lovni tasdiqlash", callback_data=f"adm_pay_ok:{order_id}")
@@ -327,7 +411,7 @@ async def process_receipt(message: types.Message, state: FSMContext):
     paket_nomi = fsm_data.get('packet', 'Coins')
     login_parol = fsm_data.get('credentials', 'Kiritilmagan')
     
-    admin_text = f"""🚨 **YANGI BUYURTMA #{order_id}**
+    admin_text = f"""🚨 **YANGI BUYURTMA #N{order_id}**
 
 👤 Mijoz: {message.from_user.full_name} (ID: {message.from_user.id})
 📱 Platforma: {platforma}
@@ -336,23 +420,17 @@ async def process_receipt(message: types.Message, state: FSMContext):
 🔑 Ma'lumotlar: `{login_parol}`"""
     
     try:
+        # Barcha buyurtma maxfiy ma'lumotlari faqat ushbu kanalga yuboriladi
         await bot.send_photo(
-            chat_id=1678146043,
+            chat_id=MAIN_CHANNEL,
             photo=message.photo[-1].file_id,
             caption=admin_text,
             reply_markup=builder.as_markup()
         )
     except Exception as e:
-        logging.error(f"Adminga yuborishda xato: {e}")
+        logging.error(f"Kanalga buyurtma yuborishda xato: {e}")
         
     await state.clear()
-
-def get_next_order_id():
-    data = load_data()
-    new_id = data.get("last_id", 1000) + 1
-    data["last_id"] = new_id
-    save_data(data)
-    return new_id
 
 # --- ADMIN PROCESS ---
 @dp.callback_query(F.data.startswith("adm_pay_ok:"))
@@ -365,7 +443,7 @@ async def admin_payment_ok(callback: types.CallbackQuery):
     builder.adjust(1)
     
     await callback.message.edit_caption(
-        caption=callback.message.caption + "\n\n💰 *To'lov tasdiqlandi. Coin tashlangandan so'ng 'Buyurtma bajarildi' tugmasini bosing.*",
+        caption=callback.message.caption + f"\n\n💰 *To'lov tasdiqlandi. Coin #N{order_id} buyurtmaga tashlangandan so'ng 'Buyurtma bajarildi' tugmasini bosing.*",
         reply_markup=builder.as_markup(),
         parse_mode="Markdown"
     )
@@ -390,10 +468,10 @@ async def admin_order_done(callback: types.CallbackQuery):
             data["users"][str(user_id)]["has_purchased"] = True
             referrer_id = data["users"][str(user_id)]["referred_by"]
             if referrer_id and str(referrer_id) in data["users"]:
-                data["users"][str(referrer_id)]["bonus"] += 10
+                data["users"][str(referrer_id)]["bonus"] += 50 # 50 Coins referal bonus
                 data["users"][str(referrer_id)]["referrals_count"] += 1
                 try:
-                    await bot.send_message(chat_id=int(referrer_id), text="🎁 Do'stingiz xarid qildi! Sizga +10 Coins bonus berildi.")
+                    await bot.send_message(chat_id=int(referrer_id), text="🎁 Do'stingiz xarid qildi! Sizga +50 Coins bonus berildi.")
                 except Exception:
                     pass
                     
@@ -411,13 +489,13 @@ async def admin_order_done(callback: types.CallbackQuery):
         
         await bot.send_message(
             chat_id=user_id,
-            text=f"🎉 **Buyurtmangiz #{order_id} muvaffaqiyatli bajarildi!**\nCoins akkauntingizga yuklandi.\n"
+            text=f"🎉 **Buyurtmangiz #N{order_id} muvaffaqiyatli bajarildi!**\nCoins akkauntingizga yuklandi.\n"
                  f"Xarid uchun +{cashback} bonus coin hamyoningizga qo'shildi.\n\n"
                  f"Iltimos, quyidagi tugma orqali xizmatimiz haqida sharh qoldiring 👇",
             reply_markup=builder.as_markup()
         )
         
-        await callback.message.edit_caption(caption=callback.message.caption + "\n\n🟢 **STATUS: BAJARILDI VA MIJOZGA XABAR BORDI**")
+        await callback.message.edit_caption(caption=callback.message.caption + f"\n\n🟢 **STATUS: #N{order_id} BAJARILDI VA MIJOZGA XABAR BORDI**")
     await callback.answer()
 
 @dp.callback_query(F.data.startswith("adm_rej:"))
@@ -431,9 +509,9 @@ async def admin_order_reject(callback: types.CallbackQuery):
         save_data(data)
         await bot.send_message(
             chat_id=order["user_id"],
-            text=f"❌ Kechirasiz, sizning #{order_id} raqamli buyurtmangiz admin tomonidan **RAD ETILDI**.\nTo'lov yoki ma'lumotlarni qayta tekshirib adminga murojaat qiling."
+            text=f"❌ Kechirasiz, sizning #N{order_id} raqamli buyurtmangiz admin tomonidan **RAD ETILDI**.\nTo'lov yoki ma'lumotlarni qayta tekshirib adminga murojaat qiling."
         )
-        await callback.message.edit_caption(caption=callback.message.caption + "\n\n🔴 **STATUS: RAD ETILDI**")
+        await callback.message.edit_caption(caption=callback.message.caption + f"\n\n🔴 **STATUS: #N{order_id} RAD ETILDI**")
     await callback.answer()
 
 # --- SHARH QOBUL QILISH VA KANALGA JOYLASHTIRISH ---
@@ -460,8 +538,9 @@ async def process_review(message: types.Message, state: FSMContext):
 🤖 @{bot_info.username}"""
     
     try:
+        # Sharhlar ham to'g'ridan-to'g'ri o'sha yagona kanalga boradi
         await bot.send_message(
-            chat_id=REVIEWS_CHANNEL, 
+            chat_id=MAIN_CHANNEL, 
             text=channel_msg,
             parse_mode="Markdown"
         )
