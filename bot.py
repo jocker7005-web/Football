@@ -437,14 +437,12 @@ async def process_receipt(message: types.Message, state: FSMContext):
     await state.clear()
 
 # --- ADMIN PROCESS ---
-
 @dp.callback_query(F.data.startswith("adm_pay_ok:"))
 async def admin_payment_ok(callback: types.CallbackQuery):
     if callback.from_user.id != 1678146043:
         await callback.answer("❌ Siz admin emassiz! Bu tugmani bosa olmaysiz.", show_alert=True)
         return
-        
-    order_id = callback.data.split(":")
+    order_id = callback.data.split(":")[-1]
     
     builder = InlineKeyboardBuilder()
     builder.button(text="🎉 Buyurtma bajarildi", callback_data=f"adm_done:{order_id}")
@@ -457,7 +455,21 @@ async def admin_payment_ok(callback: types.CallbackQuery):
         parse_mode="Markdown"
     )
     await callback.answer()
+
+@dp.callback_query(F.data.startswith("adm_done:"))
+async def admin_order_done(callback: types.CallbackQuery):
+    if callback.from_user.id != 1678146043:
+        await callback.answer("❌ Siz admin emassiz!", show_alert=True)
+        return
+    order_id = callback.data.split(":")[-1]
+    data = load_data()
+    order = data["orders"].get(str(order_id))
     
+    if order and order["status"] != "Bajarildi ✅":
+        order["status"] = "Bajarildi ✅"
+        user_id = order["user_id"]
+        coin_amount = order["details"].get("coin_amount", 0)
+        
         cashback = coin_amount // 100
         init_user(user_id)
         data["users"][str(user_id)]["bonus"] += cashback
@@ -466,24 +478,16 @@ async def admin_payment_ok(callback: types.CallbackQuery):
             data["users"][str(user_id)]["has_purchased"] = True
             referrer_id = data["users"][str(user_id)]["referred_by"]
             if referrer_id and str(referrer_id) in data["users"]:
-                data["users"][str(referrer_id)]["bonus"] += 50 # 50 Coins referal bonus
+                data["users"][str(referrer_id)]["bonus"] += 50
                 data["users"][str(referrer_id)]["referrals_count"] += 1
                 try:
                     await bot.send_message(chat_id=int(referrer_id), text="🎁 Do'stingiz xarid qildi! Sizga +50 Coins bonus berildi.")
                 except Exception:
                     pass
-                    
-        if coin_amount >= 5700:
-            if user_id not in data["tournament"]:
-                data["tournament"].append(user_id)
-                if len(data["tournament"]) == 64:
-                    await bot.send_message(chat_id=ADMIN_ID, text="🏆 DIQQAT! Turnir ishtirokchilari 64 taga yetdi, setkani shakllantiring.")
-                    data["tournament"] = []
-        
         save_data(data)
         
         builder = InlineKeyboardBuilder()
-        builder.button(text="✍️ Sharh (Otziv) qoldirish", callback_data=f"write_review:{order_id}")
+        builder.button(text="✍️ Sharh (Otziv) qoldirish", callback_data=f"write_review {order_id}")
         
         await bot.send_message(
             chat_id=user_id,
@@ -492,13 +496,28 @@ async def admin_payment_ok(callback: types.CallbackQuery):
                  f"Iltimos, quyidagi tugma orqali xizmatimiz haqida sharh qoldiring 👇",
             reply_markup=builder.as_markup()
         )
-        
         await callback.message.edit_caption(caption=callback.message.caption + f"\n\n🟢 **STATUS: #N{order_id} BAJARILDI VA MIJOZGA XABAR BORDI**")
     await callback.answer()
 
 @dp.callback_query(F.data.startswith("adm_rej:"))
 async def admin_order_reject(callback: types.CallbackQuery):
-    order_id = callback.data.split(":", 1)[1]
+    if callback.from_user.id != 1678146043:
+        await callback.answer("❌ Siz admin emassiz!", show_alert=True)
+        return
+    order_id = callback.data.split(":")[-1]
+    data = load_data()
+    order = data["orders"].get(str(order_id))
+    
+    if order:
+        order["status"] = "Rad etildi ❌"
+        save_data(data)
+        await bot.send_message(
+            chat_id=order["user_id"],
+            text=f"❌ Kechirasiz, sizning #N{order_id} raqamli buyurtmangiz admin tomonidan **RAD ETILDI**."
+        )
+        await callback.message.edit_caption(caption=callback.message.caption + f"\n\n🔴 **STATUS: #N{order_id} RAD ETILDI**")
+    await callback.answer()
+
     data = load_data()
     order = data["orders"].get(str(order_id))
     
