@@ -303,8 +303,9 @@ async def cmd_tournament(message: types.Message):
 # --- 🛒 ANDROID COINS XARID BOSQICHI ---
 @dp.message(F.text == "🛒 Android Coins")
 async def cmd_android_coins(message: types.Message, state: FSMContext):
+    await state.clear()
 
-    prices = [
+   prices = [
         "260 coins -> 40.000 so'm", "300 coins -> 45.000 so'm", "390 coins -> 60.000 so'm",
         "550 coins -> 70.000 so'm", "750 coins -> 95.000 so'm", "1040 coins -> 125.000 so'm",
         "1790 coins -> 210.000 so'm", "2130 coins -> 240.000 so'm", "2680 coins -> 310.000 so'm",
@@ -333,6 +334,7 @@ async def process_android_choice(callback: types.CallbackQuery, state: FSMContex
 # --- 🌍 REGIONLAR UCHUN COINS XARID BOSQICHI (BARCHA 13 TA DAVLAT) ---
 @dp.message(F.text == "🌍 Regionlar uchun Coins")
 async def cmd_region_coins(message: types.Message, state: FSMContext):
+        await state.clear()
     if not await check_subscription(message.from_user.id):
         await message.answer("❌ Avval kanalimizga a'zo bo'ling!", reply_markup=get_sub_keyboard())
         return
