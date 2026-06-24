@@ -183,7 +183,43 @@ async def cmd_my_orders(message: types.Message):
 async def cmd_tournament(message: types.Message):
     data = load_data()
     count = len(data.get("tournament", []))
-    await message.answer("🏆 **Katta eFootball Turniri (Slot: 0/64)**\n\n📌 **Qoida:** 5700 va undan yuqori Coins sotib olgan har 64 ta ishtirokchi o'rtasida 3 000 000 so'mlik katta turnir start oladi!", parse_mode="Markdown")
+    
+    tournament_text = f"""🏆 **GRAND eFOOTBALL MOBILE TURNIRI!** 🏆
+    
+🔥 **Siz ham haqiqiy kiberfutbol turnirida qatnashib pul mukofotini yutib olishni xohlaysizmi?**
+
+📊 **Turnir holati:** 
+🔹 Jami slot: **64 ta**
+🔹 Ro'yxatdan o'tganlar: **{count} / 64** 👥
+
+💰 **MUKOFOT JAMG'ARMASI — 3 000 000 SO'M!**
+🥇 1-O'rin: **1 500 000 so'm**
+🥈 2-O'rin: **1 000 000 so'm**
+🥉 3-O'rin: **500 000 so'm**
+
+📌 **Qatnashish Sharti (Mutlaqo Tekin):**
+Botimiz orqali **5700 Coins** va undan yuqori paket sotib olgan har bir xaridor turnir setkasiga (slotiga) avtomatik ravishda **TEKIN** qo'shiladi!
+
+📉 **Turnir Tizimi:**
+1️⃣ Har 64 ta ishtirokchi yig'ilganda turnir setkasi (chizmasi) rasman start oladi.
+2️⃣ O'yinlar **1 va 1 (Play-off)** tizimida guruh g'olibi bo'lguncha davom etadi.
+3️⃣ Turnir setkalari, jonli natijalar va g'oliblar rasm-isboti bilan guruhimizga joylanadi!
+
+🔗 **Jonli turnir setkasini ko'rish:** {MAIN_CHANNEL}
+👉 *Coins sotib oling va o'z slotingizni hoziroq band qiling!*"""
+
+    builder = InlineKeyboardBuilder()
+    builder.button(text="📊 Turnir Setkasini Ko'rish", url="https://t.me")
+    
+    try:
+        await message.answer_photo(
+            photo="https://unsplash.com",
+            caption=tournament_text,
+            reply_markup=builder.as_markup(),
+            parse_mode="Markdown"
+        )
+    except Exception:
+        await message.answer(text=tournament_text, reply_markup=builder.as_markup(), parse_mode="Markdown")
 
 # --- ✍️ TAKLIF QOLDIRISH ---
 @dp.message(F.text == "✍️ Taklif qoldirish")
