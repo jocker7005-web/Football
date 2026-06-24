@@ -520,25 +520,29 @@ async def process_review(message: types.Message, state: FSMContext):
     fsm_data = await state.get_data()
     order_id = fsm_data.get("review_order_id")
     
+    data = load_data()
+    if str(order_id) in data["orders"]:
+        data["orders"][str(order_id)]["review"] = message.text
+        save_data(data)
+    
     bot_info = await bot.get_me()
     channel_msg = f"""🌟 **YANGI SHARH (OTZIV)**
 
-📦 **Buyurtma raqami:** #N{order_id}
-👤 **Mijoz:** {message.from_user.mention}
-💬 **Sharh:** "{message.text}"
+    📦 **Buyurtma raqami:** #N{order_id}
+    👤 **Mijoz:** {message.from_user.full_name}
+    💬 **Sharh:** "{message.text}"
 
-🤖 @{bot_info.username}"""
+    🤖 @{bot_info.username}"""
     
     try:
-        # Sharhlar ham to'g'ridan-to'g'ri o'sha yagona kanalga boradi
         await bot.send_message(
-            chat_id=MAIN_CHANNEL, 
+            chat_id="@levelGroup_eFHub", 
             text=channel_msg,
             parse_mode="Markdown"
         )
-        await message.answer("✅ Rahmat! Sharhingiz buyurtma raqamingiz bilan bir xil tartibda rasmiy kanalimizga joylashtirildi. 🤝")
+        await message.answer("✅ Rahmat! Sharhingiz buyurtmangiz ichiga qo'shildi va kanalga joylashtirildi. 🤝")
     except Exception:
-        await message.answer("Sharh uchun rahmat! (Botni kanalga admin qilib tayinlashni unutmang)")
+        await message.answer("Sharh uchun rahmat!")
         
     await state.clear()
 
