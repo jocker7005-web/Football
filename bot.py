@@ -13,7 +13,7 @@ from aiogram.exceptions import TelegramBadRequest
 logging.basicConfig(level=logging.INFO)
 
 # --- MAXFIY MA'LUMOTLAR VA KONSTANTALAR ---
-BOT_TOKEN = "8893476065:AAFseE8gnPCvfV_GALln-PCvK-tz7Wihn40"
+BOT_TOKEN = "8893476065:AAHoM3p_1HMQKa0TqliGL4O5kHdgJXRIOMU"
 ADMIN_ID = 1678146043
 KARTA = "9860 3501 0897 5409 (Xusanova M)"
 MAIN_CHANNEL = "@levelGroup_eFHub"
