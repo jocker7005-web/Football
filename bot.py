@@ -183,7 +183,7 @@ async def cmd_my_orders(message: types.Message):
 async def cmd_tournament(message: types.Message):
     data = load_data()
     count = len(data.get("tournament", []))
-    await message.answer(f"🏆 **Katta eFootball Turniri...", parse_mode="Markdown")
+    await message.answer("🏆 **Katta eFootball Turniri (Slot: 0/64)**\n\n📌 **Qoida:** 5700 va undan yuqori Coins sotib olgan har 64 ta ishtirokchi o'rtasida 3 000 000 so'mlik katta turnir start oladi!", parse_mode="Markdown")
 
 # --- ✍️ TAKLIF QOLDIRISH ---
 @dp.message(F.text == "✍️ Taklif qoldirish")
@@ -376,7 +376,7 @@ async def admin_order_done(callback: types.CallbackQuery):
             pass
         
         builder = InlineKeyboardBuilder()
-        builder.button(text="✍️ Sharh qoldirish", callback_data=f"write_review:{order_id}")
+        builder.button(text="✍️ Sharh (Otziv) qoldirish", callback_data=f"write_review:{order_id}")
         await bot.send_message(chat_id=user_id, text=f"🎉 **Buyurtmangiz #N{order_id} bajarildi!**\nSharh qoldiring 👇", reply_markup=builder.as_markup())
         await callback.message.edit_caption(caption=callback.message.caption + f"\n\n🟢 STATUS: BAJARILDI")
     await callback.answer()
@@ -399,7 +399,7 @@ async def admin_order_reject(callback: types.CallbackQuery):
 # --- SHARH (OTZIV) JRAYONI ---
 @dp.callback_query(F.data.startswith("write_review "))
 async def start_review(callback: types.CallbackQuery, state: FSMContext):
-    order_id = callback.data.split(" ")[-1]
+    order_id = callback.data.split(":")[-1]
     await state.set_state(BotStates.writing_review)
     await state.update_data(order_id=order_id)
     await callback.message.answer("Xizmatimiz haqidagi fikringizni (sharhingizni) yozib yuboring:")
