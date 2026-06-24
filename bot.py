@@ -437,33 +437,27 @@ async def process_receipt(message: types.Message, state: FSMContext):
     await state.clear()
 
 # --- ADMIN PROCESS ---
+
 @dp.callback_query(F.data.startswith("adm_pay_ok:"))
 async def admin_payment_ok(callback: types.CallbackQuery):
-    order_id = callback.data.split(":", 1)[1]
+    if callback.from_user.id != 1678146043:
+        await callback.answer("❌ Siz admin emassiz! Bu tugmani bosa olmaysiz.", show_alert=True)
+        return
+        
+    order_id = callback.data.split(":")
     
-    builder = InlineKeyboardBuilder(
+    builder = InlineKeyboardBuilder()
     builder.button(text="🎉 Buyurtma bajarildi", callback_data=f"adm_done:{order_id}")
     builder.button(text="❌ Rad etish", callback_data=f"adm_rej:{order_id}")
     builder.adjust(1)
     
     await callback.message.edit_caption(
-        caption=callback.message.caption + f"\n\n💰 *To'lov tasdiqlandi. Coin #N{order_id} buyurtmaga tashlangandan so'ng 'Buyurtma bajarildi' tugmasini bosing.*",
+        caption=callback.message.caption + f"\n\n💰 *To'lov tasdiqlandi. Coin buyurtmaga tashlangandan so'ng 'Buyurtma bajarildi' tugmasini bosing.*",
         reply_markup=builder.as_markup(),
         parse_mode="Markdown"
     )
     await callback.answer()
-
-@dp.callback_query(F.data.startswith("adm_done:"))
-async def admin_order_done(callback: types.CallbackQuery):
-    order_id = callback.data.split(":", 1)[1]
-    data = load_data()
-    order = data["orders"].get(str(order_id))
     
-    if order and order["status"] != "Bajarildi ✅":
-        order["status"] = "Bajarildi ✅"
-        user_id = order["user_id"]
-        coin_amount = order["details"].get("coin_amount", 0)
-        
         cashback = coin_amount // 100
         init_user(user_id)
         data["users"][str(user_id)]["bonus"] += cashback
