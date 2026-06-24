@@ -441,7 +441,7 @@ async def process_receipt(message: types.Message, state: FSMContext):
 async def admin_payment_ok(callback: types.CallbackQuery):
     order_id = callback.data.split(":", 1)[1]
     
-    builder = InlineKeyboardBuilder()
+    builder = InlineKeyboardBuilder(
     builder.button(text="🎉 Buyurtma bajarildi", callback_data=f"adm_done:{order_id}")
     builder.button(text="❌ Rad etish", callback_data=f"adm_rej:{order_id}")
     builder.adjust(1)
