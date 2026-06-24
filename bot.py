@@ -530,32 +530,52 @@ async def process_review(message: types.Message, state: FSMContext):
     fsm_data = await state.get_data()
     order_id = fsm_data.get("review_order_id")
     
+    # 1. Bazani ochamiz va sharhni buyurtma ichiga yozamiz
     data = load_data()
-    if str(order_id) in data["orders"]:
-        data["orders"][str(order_id)]["review"] = message.text
-        save_data(data)
+    order = data["orders"].get(str(order_id))
     
+    if order:
+        order["review"] = message.text
+        save_data(data)
+        
+        # 2. Buyurtmaning barcha eski ma'lumotlarini bazadan qayta tiklaymiz
+        details = order.get("details", {})
+        platforma = details.get('platform', 'Android')
+        region_nomi = details.get('region', "O'yin ichidan")
+        paket_nomi = details.get('packet', 'Coins')
+    else:
+        platforma, region_nomi, paket_nomi = "Nomalum", "Nomalum", "Coins"
+
     bot_info = await bot.get_me()
-    channel_msg = f"""🌟 **YANGI SHARH (OTZIV)**
+    
+    # 3. Guruhga boradigan va sharh bilan buyurtmani birlashtirgan yakuniy matn
+    channel_msg = f"""🎉 **XARID VA SHARH MUVAFFAQIYATLI YAKUNLANDI!**
 
-    📦 **Buyurtma raqami:** #N{order_id}
-    👤 **Mijoz:** {message.from_user.full_name}
-    💬 **Sharh:** "{message.text}"
+📦 **Buyurtma raqami:** #N{order_id}
+👤 **Mijoz:** {message.from_user.full_name}
+📱 **Platforma:** {platforma}
+🌍 **Region:** {region_nomi}
+💰 **Sotib olingan paket:** {paket_nomi}
 
-    🤖 @{bot_info.username}"""
+💬 **Mijoz qoldirgan sharh (Otziv):**
+"{message.text}"
+
+🤖 @{bot_info.username}"""
     
     try:
+        # Guruhga (guruh yuserneymiga) to'liq ma'lumot yetib boradi
         await bot.send_message(
             chat_id="@coinssharhlar", 
             text=channel_msg,
             parse_mode="Markdown"
         )
-        
-        await message.answer("✅ Rahmat! Sharhingiz buyurtmangiz ichiga qo'shildi va kanalga joylashtirildi. 🤝")
-    except Exception:
+        await message.answer("✅ Rahmat! Sharhingiz buyurtma ma'lumotlari bilan birga guruhimizga muvaffaqiyatli joylashtirildi. 🤝")
+    except Exception as e:
+        logging.error(f"Guruhga xabar yuborishda xato: {e}")
         await message.answer("Sharh uchun rahmat!")
         
     await state.clear()
+
 
 @dp.message(F.text == "🛠 Admin Panel")
 async def cmd_admin_panel(message: types.Message):
