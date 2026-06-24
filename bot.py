@@ -554,6 +554,7 @@ async def process_review(message: types.Message, state: FSMContext):
 @dp.message(F.text == "🛠 Admin Panel")
 async def cmd_admin_panel(message: types.Message):
     if message.from_user.id != 1678146043: return
+
         data = load_data()
         total_users = len(data.get("users", {}))
         total_orders = len(data.get("orders", {}))
