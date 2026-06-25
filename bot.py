@@ -266,6 +266,7 @@ async def cmd_region_coins(message: types.Message, state: FSMContext):
     "Канада 🇨🇦",
     "Мексика 🇲🇽",
     "США 🇺🇸",
+    "Турция 🇹🇷",
     "Саудовская Аравия 🇸🇦",
     "Австралия 🇦🇺",
     "Швеция 🇸🇪",
