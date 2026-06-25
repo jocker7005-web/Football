@@ -351,8 +351,9 @@ async def process_receipt(message: types.Message, state: FSMContext):
     paket_nomi = fsm_data.get('packet', 'Coins')
     login_parol = fsm_data.get('credentials', 'Kiritilmagan')
     
-    admin_text = f"🚨 **YANGI BUYURTMA #N{order_id}**\n\n👤 Mijoz: {message.from_user.full_name} (ID: {message.from_user.id})\n📱 Platforma: {platforma}\n🌍 Region: {region_nomi}\n📦 Paket: {paket_nomi}\n🔑 Ma'lumotlar: `{login_parol}`"
-    
+        mijoz_link = f"@{message.from_user.username}" if message.from_user.username else f"[{message.from_user.full_name}](tg://user?id={message.from_user.id})"
+    admin_text = f"🚨 **YANGI BUYURTMA #N{order_id}**\n\n👤 Mijoz: {mijoz_link} (ID: {message.from_user.id})\n📱 Platforma: {platforma}\n🌍 Region: {region_nomi}\n📦 Paket: {paket_nomi}\n🔑 Ma'lumotlar: `{login_parol}`"
+
     try:
         # Xavfsizlik ta'minlandi: Maxfiy ma'lumotlar va cheklar faqat shaxsiy adminga keladi!
         await bot.send_photo(chat_id=ADMIN_ID, photo=message.photo[-1].file_id, caption=admin_text, reply_markup=builder.as_markup())
