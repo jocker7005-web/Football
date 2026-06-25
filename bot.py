@@ -429,7 +429,6 @@ async def admin_order_reject(callback: types.CallbackQuery):
         order["status"] = "Rad etildi ❌"
         save_data(data)
         
-        # Mijoz adminga 1 soniyada yozishi uchun maxsus inline tugma yaratamiz
         builder = InlineKeyboardBuilder()
         builder.button(text="👨‍💻 Admin bilan bog'lanish", url="https://t.me")
         
@@ -439,14 +438,14 @@ async def admin_order_reject(callback: types.CallbackQuery):
                  f"ℹ️ Muammoni hal qilish yoki batafsil ma'lumot olish uchun quyidagi tugma orqali admin bilan bog'laning 👇",
             reply_markup=builder.as_markup()
         )
-       try:
-           await callback.message.edit_caption(caption=callback.message.caption + f"\n\n🔴 STATUS: RAD ETILDI")
-       except Exception:
-           await callback.message.reply(text=f"🔴 STATUS: #N{order_id} RAD ETILDI")
+        try:
+            await callback.message.edit_caption(caption=callback.message.caption + f"\n\n🔴 STATUS: RAD ETILDI")
+        except Exception:
+            await callback.message.reply(text=f"🔴 STATUS: #N{order_id} RAD ETILDI")
             
-       await callback.answer()
+    await callback.answer()
 
-# --- SHARH (OTZIV) JRAYONI ---
+# --- SHARHLAR ---
 @dp.callback_query(F.data.startswith("write_review:"))
 async def start_review(callback: types.CallbackQuery, state: FSMContext):
     order_id = callback.data.split(":")[-1]
@@ -457,37 +456,27 @@ async def start_review(callback: types.CallbackQuery, state: FSMContext):
 
 @dp.message(BotStates.writing_review, F.text)
 async def process_review(message: types.Message, state: FSMContext):
-    if message.text in ["🛒 Android Coins", "🌍 Regionlar uchun Coins", "🏆 Turnir", "🎁 Bonuslarim", "📖 Qo'llanma", "📦 Mening buyurtmalarim", "⭐ Sharhlar", "✍️ Taklif qoldirish", "👨‍💻 Admin / Yordam"]:
+    if message.text in ["🛒 Android Coins", "🌍 Regionlar uchun Coins", "🏆 Turnir", "🎁 Bonuslarim", "📖 Qo'llanma", "📦 Mening buyurtmalarim", "⭐ Sharhlar", "✍️ Taklif qoldirish", "👨‍💻 Admin / Yordam", "🎯 Kunlik Viktorina"]:
         await state.clear()
         return await dp.feed_message(bot, message)
     fsm_data = await state.get_data()
     order_id = fsm_data.get("order_id")
-    
     data = load_data()
     order = data["orders"].get(str(order_id))
-    
     mijoz_user = f"@{message.from_user.username}" if message.from_user.username else message.from_user.full_name
-    if not mijoz_user or mijoz_user == ".":
-        mijoz_user = f"Mijoz ({message.from_user.id})"
-
     if order:
         order["review"] = message.text
         save_data(data)
         details = order.get("details", {})
-        platforma = details.get('platform', 'Android')
-        region_nomi = details.get('region', "O'yin ichidan")
-        paket_nomi = details.get('packet', 'Coins')
+        plat, reg, pak = details.get('platform', 'Android'), details.get('region', 'Global'), details.get('packet', 'Coins')
     else:
-        platforma, region_nomi, paket_nomi = "Android", "O'yin ichidan (Android)", "Coins"
-
-    bot_info = await bot.get_me()
-    channel_msg = f"🎉 **XARID VA SHARH MUVAFFAQIYATLI YAKUNLANDI!**\n\n📦 **Buyurtma raqami:** #N{order_id}\n👤 **Mijoz:** {mijoz_user}\n📱 **Platforma:** {platforma}\n🌍 **Region:** {region_nomi}\n💰 **Sotib olingan paket:** {paket_nomi}\n\n💬 **Mijoz qoldirgan sharh (Otziv):**\n\"{message.text}\"\n\n🤖 @{bot_info.username}"
+        plat, reg, pak = "Android", "Global", "Coins"
     
+    bot_info = await bot.get_me()
+    channel_msg = f"🎉 XARID VA SHARH MUVAFFAQIYATLI YAKUNLANDI!\n\n📦 Buyurtma raqami: #N{order_id}\n👤 Mijoz: {mijoz_user}\n📱 Platforma: {plat}\n🌍 Region: {reg}\n💰 Paket: {pak}\n\n💬 Sharh:\n\"{message.text}\"\n\n🤖 @{bot_info.username}"
     try:
-        # parse_mode o'chirildi, shunda xabarlar xatosiz va tezkor yetib boradi
-        await bot.send_message(chat_id="@coinssharhlar", text=channel_msg)
-        await message.answer("✅ Rahmat! Sharhingiz guruhga joylashtirildi. 🤝")
-
+        await bot.send_message(chat_id=MAIN_CHANNEL, text=channel_msg)
+        await message.answer("✅ Rahmat! Sharhingiz guruhimizga joylashtirildi. 🤝")
     except Exception:
         await message.answer("Sharh uchun rahmat!")
     await state.clear()
@@ -496,10 +485,11 @@ async def process_review(message: types.Message, state: FSMContext):
 async def cmd_admin_panel(message: types.Message):
     if message.from_user.id == ADMIN_ID:
         data = load_data()
-        await message.answer(f"🛠 **Admin Panel**\n\n👥 Foydalanuvchilar: {len(data.get('users', {}))}\n📦 Buyurtmalar: {len(data.get('orders', {}))}")
+        await message.answer(f"🛠 Admin Panel\n\n👥 Foydalanuvchilar: {len(data.get('users', {}))}\n📦 Buyurtmalar: {len(data.get('orders', {}))}")
 
 async def main():
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
     asyncio.run(main())
+
