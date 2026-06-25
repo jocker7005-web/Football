@@ -185,7 +185,7 @@ async def cmd_tournament(message: types.Message):
                       f"Botimiz orqali <b>5700 Coins</b> va undan yuqori paket sotib olgan har bir xaridor turnir setkasiga avtomatik razvda <b>TEKIN</b> qo'shiladi!\n\n" \
                       f"🔗 <b>Jonli turnir setkasini ko'rish:</b> {MAIN_CHANNEL}"
     builder = InlineKeyboardBuilder()
-    builder.button(text="📊 Turnir Setkasini Ko'rish", url="https://t.me")
+    builder.button(text="📊 Turnir Setkasini Ko'rish", url="https://t.me/levelGroup_eFHub")
     try:
         await message.answer_photo(
             photo="https://unsplash.com",
