@@ -200,30 +200,13 @@ async def cmd_tournament(message: types.Message):
 @dp.message(F.text == "🎯 Kunlik Viktorina")
 async def cmd_quiz(message: types.Message, state: FSMContext):
     await state.clear()
-    question = "⚽ eFootball Savoli:\n\neFootball Mobile o'yinida standart (GP) narxi eng qimmat bo'lgan afsonaviy yarim himoyachi kim?"
-    options = ["A) Kevin De Bruyne 🇧🇪", "B) Rodri 🇪🇸", "C) Jude Bellingham 🏴󠁧󠁢󠁥󠁮󠁧󠁿", "D) Luka Modric 🇭🇷"]
-    builder = InlineKeyboardBuilder()
-    builder.button(text="A", callback_data="quiz_wrong")
-    builder.button(text="B (To'g'ri) ✅", callback_data="quiz_correct")
-    builder.button(text="C", callback_data="quiz_wrong")
-    builder.button(text="D", callback_data="quiz_wrong")
-    builder.adjust(2)
-    await message.answer(text=f"{question}\n\n" + "\n".join(options), reply_markup=builder.as_markup())
-
-@dp.callback_query(F.data == "quiz_correct")
-async def quiz_correct_answer(callback: types.CallbackQuery):
-    user_id = callback.from_user.id
-    data = load_data()
-    init_user(user_id)
-    data["users"][str(user_id)]["bonus"] += 5
-    save_data(data)
-    await callback.message.edit_text("🎉 <b>TABRIKLAYMIZ!</b>\n\nSiz to'g'ri javobni topdingiz va hisobingizga <b>+5 Coins</b> halol bonus qo'shildi! 💰", parse_mode="HTML")
-    await callback.answer()
-
-@dp.callback_query(F.data == "quiz_wrong")
-async def quiz_wrong_answer(callback: types.CallbackQuery):
-    await callback.message.edit_text("❌ <b>NOTO'G'RI JAVOB!</b>\n\nAfsuski javobingiz noto'g'ri chiqdi. Ertaga yangi savolda omadingizni sinab ko'ring! 💪", parse_mode="HTML")
-    await callback.answer()
+    await message.answer(
+        "🚀 <b>KATTA BONUS TIZIMI — TEZ KUNDA!</b>\n\n"
+        "⏳ Hozirda ushbu boʻlimda yangi aksiya va texnik sozlash ishlari ketmoqda.\n"
+        "Yaqin kunlarda yirik Coins sovgʻalari va mutlaqo yangi bonuslar bilan ushbu boʻlim toʻliq ishga tushadi! 🔥\n\n"
+        "🔔 Yangiliklarni oʻtkazib yubormaslik uchun rasmiy kanalimizni kuzatib boring: https://t.me/levelGroup_eFHub",
+        parse_mode="HTML"
+    )
 # --- ✍️ TAKLIF QOLDIRISH ---
 @dp.message(F.text == "✍️ Taklif qoldirish")
 async def cmd_suggestion(message: types.Message, state: FSMContext):
