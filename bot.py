@@ -209,7 +209,7 @@ Botimiz orqali **5700 Coins** va undan yuqori paket sotib olgan har bir xaridor 
 👉 *Coins sotib oling va o'z slotingizni hoziroq band qiling!*"""
 
     builder = InlineKeyboardBuilder()
-    builder.button(text="📊 Turnir Setkasini Ko'rish", url="https://t.me")
+    builder.button(text="📊 Turnir Setkasini Ko'rish", url="https://t.me/levelGroup_eFHub")
     
     try:
         await message.answer_photo(
@@ -430,7 +430,7 @@ async def admin_order_reject(callback: types.CallbackQuery):
         save_data(data)
         
         builder = InlineKeyboardBuilder()
-        builder.button(text="👨‍💻 Admin bilan bog'lanish", url="https://t.me")
+        builder.button(text="👨‍💻 Admin bilan bog'lanish", url="jocker7005")
         
         await bot.send_message(
             chat_id=order["user_id"], 
