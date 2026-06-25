@@ -416,6 +416,7 @@ async def admin_order_done(callback: types.CallbackQuery):
                              f"👉 Siz ham 5700+ Coins sotib oling va turnir setkasidan joy oling!"
                     )
                 except Exception:
+                await callback.answer()
 
 @dp.callback_query(F.data.startswith("adm_rej:"))
 async def admin_order_reject(callback: types.CallbackQuery):
