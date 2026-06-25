@@ -429,12 +429,26 @@ async def admin_order_reject(callback: types.CallbackQuery):
     if order:
         order["status"] = "Rad etildi ❌"
         save_data(data)
-        await bot.send_message(chat_id=order["user_id"], text=f"❌ Kechirasiz, sizning #N{order_id} raqamli buyurtmangiz admin tomonidan **RAD ETILDI**.")
-        await callback.message.edit_caption(caption=callback.message.caption + f"\n\n🔴 **STATUS: #N{order_id} RAD ETILDI**")
+        
+        # Mijoz adminga 1 soniyada yozishi uchun maxsus inline tugma yaratamiz
+        builder = InlineKeyboardBuilder()
+        builder.button(text="👨‍💻 Admin bilan bog'lanish", url="https://t.me")
+        
+        await bot.send_message(
+            chat_id=order["user_id"], 
+            text=f"❌ Kechirasiz, sizning #N{order_id} raqamli buyurtmangiz admin tomonidan **RAD ETILDI**.\n\n"
+                 f"ℹ️ Muammoni hal qilish yoki batafsil ma'lumot olish uchun quyidagi tugma orqali admin bilan bog'laning 👇",
+            reply_markup=builder.as_markup()
+        )
+       try:
+           await callback.message.edit_caption(caption=callback.message.caption + f"\n\n🔴 STATUS: RAD ETILDI")
+       except Exception:
+           await callback.message.reply(text=f"🔴 STATUS: #N{order_id} RAD ETILDI")
+            
     await callback.answer()
 
 # --- SHARH (OTZIV) JRAYONI ---
-@dp.callback_query(F.data.startswith("write_review "))
+@dp.callback_query(F.data.startswith("write_review:"))
 async def start_review(callback: types.CallbackQuery, state: FSMContext):
     order_id = callback.data.split(":")[-1]
     await state.set_state(BotStates.writing_review)
