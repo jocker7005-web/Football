@@ -351,7 +351,7 @@ async def process_receipt(message: types.Message, state: FSMContext):
     paket_nomi = fsm_data.get('packet', 'Coins')
     login_parol = fsm_data.get('credentials', 'Kiritilmagan')
     
-        mijoz_link = f"@{message.from_user.username}" if message.from_user.username else f"[{message.from_user.full_name}](tg://user?id={message.from_user.id})"
+    mijoz_link = f"@{message.from_user.username}" if message.from_user.username else f"[{message.from_user.full_name}](tg://user?id={message.from_user.id})"
     admin_text = f"🚨 **YANGI BUYURTMA #N{order_id}**\n\n👤 Mijoz: {mijoz_link} (ID: {message.from_user.id})\n📱 Platforma: {platforma}\n🌍 Region: {region_nomi}\n📦 Paket: {paket_nomi}\n🔑 Ma'lumotlar: `{login_parol}`"
 
     try:
