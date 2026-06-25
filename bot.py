@@ -419,7 +419,76 @@ async def admin_order_done(callback: types.CallbackQuery):
 @dp.callback_query(F.data.startswith("adm_rej:"))
 async def admin_order_reject(callback: types.CallbackQuery):
     if callback.from_user.id != ADMIN_ID: return
-    order_id = callback.data.split(":")[-1].replace("[", "").replace("]", "").replace("'", "").strip()
+# --- ADMIN CALLBACK PROCESS ---
+@dp.callback_query(F.data.startswith("adm_pay_ok:"))
+async def admin_payment_ok(callback: types.CallbackQuery):
+    if callback.from_user.id != ADMIN_ID: return
+    # Order_id ajratishdagi list xatosi to'g'irlandi
+    order_id = str(callback.data.split(":")[-1]).replace("[", "").replace("]", "").replace("'", "").strip()
+    
+    builder = InlineKeyboardBuilder()
+    builder.button(text="🎉 Buyurtma bajarildi", callback_data=f"adm_done:{order_id}")
+    builder.button(text="❌ Rad etish", callback_data=f"adm_rej:{order_id}")
+    builder.adjust(1)
+    try:
+        await callback.message.edit_caption(caption=callback.message.caption + f"\n\n💰 To'lov tasdiqlandi.", reply_markup=builder.as_markup())
+    except Exception:
+        await callback.message.reply(text=f"💰 #N{order_id} To'lov tasdiqlandi. Bajarilgach pastdagi tugmani bosing.", reply_markup=builder.as_markup())
+    await callback.answer()
+
+@dp.callback_query(F.data.startswith("adm_done:"))
+async def admin_order_done(callback: types.CallbackQuery):
+    if callback.from_user.id != ADMIN_ID: return
+    order_id = str(callback.data.split(":")[-1]).replace("[", "").replace("]", "").replace("'", "").strip()
+    data = load_data()
+    order = data["orders"].get(str(order_id))
+    
+    if order and order["status"] != "Bajarildi ✅":
+        order["status"] = "Bajarildi ✅"
+        user_id = order["user_id"]
+        
+        mijoz_user = f"@{callback.message.from_user.username}" if callback.message.from_user.username else callback.message.from_user.full_name
+        if not mijoz_user or mijoz_user == ".": mijoz_user = f"Mijoz_{user_id}"
+
+        details = order.get("details", {})
+        coin_amount = details.get("coin_amount", 0)
+        paket_nomi = details.get("packet", "Coins")
+        
+        # --- 🏆 TURNIRGA AVTOMATIK QO'SHISH TIZIMI ---
+        if coin_amount >= 5700 or "5700" in str(paket_nomi) or "13440" in str(paket_nomi) or "32200" in str(paket_nomi):
+            if "tournament" not in data: data["tournament"] = []
+            if mijoz_user not in data["tournament"] and len(data["tournament"]) < 64:
+                data["tournament"].append(mijoz_user)
+                try:
+                    yangi_count = len(data["tournament"])
+                    await bot.send_message(MAIN_CHANNEL, f"🔥 **TURNIRGA YANGI ISHTIROKCHI!**\n👤 {mijoz_user}\n📊 {yangi_count} / 64")
+                except Exception: pass
+
+        cashback = coin_amount // 100
+        init_user(user_id)
+        data["users"][str(user_id)]["bonus"] += cashback
+        
+        if not data["users"][str(user_id)]["has_purchased"]:
+            data["users"][str(user_id)]["has_purchased"] = True
+            referrer_id = data["users"][str(user_id)]["referred_by"]
+            if referrer_id and str(referrer_id) in data["users"]:
+                data["users"][str(referrer_id)]["bonus"] += 50
+                data["users"][str(referrer_id)]["referrals_count"] += 1
+        save_data(data)
+        
+        builder = InlineKeyboardBuilder()
+        builder.button(text="✍️ Sharh qoldirish", callback_data=f"write_review:{order_id}")
+        await bot.send_message(user_id, f"🎉 Buyurtmangiz #N{order_id} bajarildi!\nCoins hamyoningizga yuklandi.", reply_markup=builder.as_markup())
+        try:
+            await callback.message.edit_caption(caption=callback.message.caption + f"\n\n🟢 STATUS: BAJARILDI")
+        except Exception:
+            await callback.message.reply(text=f"🟢 STATUS: #N{order_id} BAJARILDI")
+    await callback.answer()
+
+@dp.callback_query(F.data.startswith("adm_rej:"))
+async def admin_order_reject(callback: types.CallbackQuery):
+    if callback.from_user.id != ADMIN_ID: return
+    order_id = str(callback.data.split(":")[-1]).replace("[", "").replace("]", "").replace("'", "").strip()
     data = load_data()
     order = data["orders"].get(str(order_id))
     
@@ -428,19 +497,17 @@ async def admin_order_reject(callback: types.CallbackQuery):
         save_data(data)
         
         builder = InlineKeyboardBuilder()
-        builder.button(text="👨‍💻 Admin bilan bog'lanish", url="jocker7005")
+        builder.button(text="👨‍💻 Admin bilan bog'lanish", url="https://t.me")
         
         await bot.send_message(
-            chat_id=order["user_id"], 
-            text=f"❌ Kechirasiz, sizning #N{order_id} raqamli buyurtmangiz admin tomonidan **RAD ETILDI**.\n\n"
-                 f"ℹ️ Muammoni hal qilish yoki batafsil ma'lumot olish uchun quyidagi tugma orqali admin bilan bog'laning 👇",
+            order["user_id"], 
+            f"❌ Kechirasiz, sizning #N{order_id} raqamli buyurtmangiz rad etildi.",
             reply_markup=builder.as_markup()
         )
         try:
             await callback.message.edit_caption(caption=callback.message.caption + f"\n\n🔴 STATUS: RAD ETILDI")
         except Exception:
             await callback.message.reply(text=f"🔴 STATUS: #N{order_id} RAD ETILDI")
-            
     await callback.answer()
 
 # --- SHARHLAR ---
