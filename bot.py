@@ -259,7 +259,21 @@ async def process_android_choice(callback: types.CallbackQuery, state: FSMContex
 @dp.message(F.text == "🌍 Regionlar uchun Coins")
 async def cmd_region_coins(message: types.Message, state: FSMContext):
     await state.clear()
-    regions = ["Япония 🇯🇵", "ОАЭ 🇦🇪", "Египет 🇪🇬", "Канада 🇨🇦", "Мексика 🇲🇽", "США 🇺🇸", "Турция 🇹🇷", "Европа 🇪🇺"]
+    regions = [
+    "Япония 🇯🇵",
+    "ОАЭ 🇦🇪",
+    "Египет 🇪🇬",
+    "Канада 🇨🇦",
+    "Мексика 🇲🇽",
+    "США 🇺🇸",
+    "Саудовская Аравия 🇸🇦",
+    "Австралия 🇦🇺",
+    "Швеция 🇸🇪",
+    "Швейцария 🇨🇭",
+    "Великобритания 🇬🇧",
+    "Индонезия 🇮🇩",
+    "Малайзия 🇲🇾"
+    ]
     builder = InlineKeyboardBuilder()
     for reg in regions:
         builder.button(text=reg, callback_data=f"reg_set:{reg}")
