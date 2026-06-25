@@ -391,33 +391,31 @@ async def admin_order_done(callback: types.CallbackQuery):
     if order and order["status"] != "Bajarildi ✅":
         order["status"] = "Bajarildi ✅"
         user_id = order["user_id"]
-        coin_amount = order["details"].get("coin_amount", 0)
-        cashback = coin_amount // 100
-        init_user(user_id)
-        data["users"][str(user_id)]["bonus"] += cashback
         
-        if not data["users"][str(user_id)]["has_purchased"]:
-            data["users"][str(user_id)]["has_purchased"] = True
-            referrer_id = data["users"][str(user_id)]["referred_by"]
-            if referrer_id and str(referrer_id) in data["users"]:
-                data["users"][str(referrer_id)]["bonus"] += 50
-                data["users"][str(referrer_id)]["referrals_count"] += 1
-        save_data(data)
-        
-        # --- GURUHGA "BAJARILDI" XABARINI VA MIJOZ CHEKINI YUBORISH ---
-        try:
-            guruh_text = f"✅ **BUYURTMA MUVAFFAQIYATLI BAJARILDI!**\n\n📦 **Buyurtma raqami:** #N{order_id}\n💰 **Paket:** {order['details'].get('packet', 'Coins')}\n📊 **Holati:** Muvaffaqiyatli yuklandi 🟢"
-            # Admin xabaridagi rasmni (chekni) guruhga nusxalab yuboradi
-            await bot.send_photo(chat_id=MAIN_CHANNEL, photo=callback.message.photo[-1].file_id, caption=guruh_text)
-        except Exception:
-            pass
-        
-        builder = InlineKeyboardBuilder()
-        builder.button(text="✍️ Sharh (Otziv) qoldirish", callback_data=f"write_review:{order_id}")
-        await bot.send_message(chat_id=user_id, text=f"🎉 **Buyurtmangiz #N{order_id} bajarildi!**\nSharh qoldiring 👇", reply_markup=builder.as_markup())
-        await callback.message.edit_caption(caption=callback.message.caption + f"\n\n🟢 STATUS: BAJARILDI")
-    await callback.answer()
+        mijoz_user = f"@{callback.from_user.username}" if callback.from_user.username else callback.from_user.full_name
+        if not mijoz_user or mijoz_user == ".":
+            mijoz_user = f"Mijoz_{user_id}"
 
+        details = order.get("details", {})
+        coin_amount = details.get("coin_amount", 0)
+        paket_nomi = details.get("packet", "Coins")
+        
+        if coin_amount >= 5700 or "5700" in str(paket_nomi) or "13440" in str(paket_nomi) or "32200" in str(paket_nomi):
+            if "tournament" not in data:
+                data["tournament"] = []
+                
+            if mijoz_user not in data["tournament"] and len(data["tournament"]) < 64:
+                data["tournament"].append(mijoz_user)
+                try:
+                    yangi_count = len(data["tournament"])
+                    await bot.send_message(
+                        chat_id=MAIN_CHANNEL,
+                        text=f"🔥 **TURNIRGA YANGI ISHTIROKCHI QO'SHILDI!**\n\n"
+                             f"👤 **O'yinchi:** {mijoz_user}\n"
+                             f"📊 **Turnir sloti:** `{yangi_count} / 64` o'yinchi 🏁\n\n"
+                             f"👉 Siz ham 5700+ Coins sotib oling va turnir setkasidan joy oling!"
+                    )
+                except Exception:
 
 @dp.callback_query(F.data.startswith("adm_rej:"))
 async def admin_order_reject(callback: types.CallbackQuery):
