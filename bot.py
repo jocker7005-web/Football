@@ -384,7 +384,7 @@ async def admin_payment_ok(callback: types.CallbackQuery):
 @dp.callback_query(F.data.startswith("adm_done:"))
 async def admin_order_done(callback: types.CallbackQuery):
     if callback.from_user.id != ADMIN_ID: return
-    order_id = callback.data.split(":")[-1]
+    order_id = callback.data.split(":")[-1].replace("[", "").replace("]", "").replace("'", "").strip()
     data = load_data()
     order = data["orders"].get(str(order_id))
     
@@ -421,7 +421,7 @@ async def admin_order_done(callback: types.CallbackQuery):
 @dp.callback_query(F.data.startswith("adm_rej:"))
 async def admin_order_reject(callback: types.CallbackQuery):
     if callback.from_user.id != ADMIN_ID: return
-    order_id = callback.data.split(":")[-1]
+    order_id = callback.data.split(":")[-1].replace("[", "").replace("]", "").replace("'", "").strip()
     data = load_data()
     order = data["orders"].get(str(order_id))
     
