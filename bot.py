@@ -382,15 +382,24 @@ async def process_receipt(message: types.Message, state: FSMContext):
 # --- ADMIN CALLBACK PROCESS ---
 @dp.callback_query(F.data.startswith("adm_pay_ok:"))
 async def admin_payment_ok(callback: types.CallbackQuery):
+    if callback.from_user.id != ADMIN_ID: return
     order_id = str(callback.data.split(":")[-1]).strip()
+    
     builder = InlineKeyboardBuilder()
     builder.button(text="🎉 Buyurtma bajarildi", callback_data=f"adm_done:{order_id}")
     builder.button(text="❌ Rad etish", callback_data=f"adm_rej:{order_id}")
     builder.adjust(1)
+    
     try:
-        await callback.message.edit_caption(caption=callback.message.caption + f"\n\n💰 To'lov tasdiqlandi. Coin yuklangach 'Bajarildi' tugmasini bosing.", reply_markup=builder.as_markup(), parse_mode="HTML")
+        # Xabar tahrirlashda parse_mode olib tashlandi, shunda bot har qanday belgida qotmaydi!
+        await callback.message.edit_caption(
+            caption=str(callback.message.caption or "") + f"\n\n💰 To'lov tasdiqlandi. Coin yuklangach 'Bajarildi' tugmasini bosing.", 
+            reply_markup=builder.as_markup(),
+            parse_mode=None
+        )
     except Exception:
-        await callback.message.reply(text=f"💰 #N{order_id} To'lov tasdiqlandi.", reply_markup=builder.as_markup())
+        await callback.message.reply(text=f"💰 #N{order_id} To'lov tasdiqlandi. Coin yuklangach quyidagi tugmalarni bosing:", reply_markup=builder.as_markup())
+        
     await callback.answer()
 
 @dp.callback_query(F.data.startswith("adm_done:"))
