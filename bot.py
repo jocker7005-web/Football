@@ -519,10 +519,9 @@ async def process_review(message: types.Message, state: FSMContext):
 
 @dp.message(F.text == "🛠 Admin Panel")
 async def cmd_admin_panel(message: types.Message):
-    if message.from_user.id in ADMINS:
-        data = load_data()
-        await message.answer(f"🛠 <b>Admin Panel</b>\n\n👥 Foydalanuvchilar: {len(data.get('users', {}))}\n📦 Buyurtmalar: {len(data.get('orders', {}))}", parse_mode="HTML")
-
+        if message.from_user.id == ADMIN_ID:
+            data = load_data()
+            await message.answer(f"🛠 <b>Admin Panel</b>\n\n👥 Foydalanuvchilar: {len(data.get('users', {}))}\n📦 Buyurtmalar: {len(data.get('orders', {}))}", parse_mode="HTML")
 async def main():
     await dp.start_polling(bot)
 
