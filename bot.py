@@ -371,7 +371,7 @@ async def process_receipt(message: types.Message, state: FSMContext):
     
     admin_text = f"🚨 <b>YANGI BUYURTMA #N{order_id}</b>\n\n👤 Mijoz: {mijoz_link} (ID: <code>{message.from_user.id}</code>)\n📱 Platforma: {platforma}\n🌍 Region: {region_nomi}\n📦 Paket: {paket_nomi}\n🔑 Ma'lumotlar: <code>{login_parol}</code>"
     try:
-        await bot.send_photo(chat_id=ADMIN_ID, photo=message.photo[-1].file_id, caption=admin_text, reply_markup=builder.as_markup(), parse_mode="HTML")
+        await bot.send_photo(chat_id=ADMINS, photo=message.photo[-1].file_id, caption=admin_text, reply_markup=builder.as_markup(), parse_mode="HTML")
     except Exception:
         pass
     await state.clear()
@@ -496,7 +496,7 @@ async def process_review(message: types.Message, state: FSMContext):
 
 @dp.message(F.text == "🛠 Admin Panel")
 async def cmd_admin_panel(message: types.Message):
-    if message.from_user.id == ADMIN_ID:
+    if message.from_user.id == ADMINS:
         data = load_data()
         await message.answer(f"🛠 <b>Admin Panel</b>\n\n👥 Foydalanuvchilar: {len(data.get('users', {}))}\n📦 Buyurtmalar: {len(data.get('orders', {}))}", parse_mode="HTML")
 
