@@ -293,21 +293,35 @@ async def cmd_region_coins(message: types.Message, state: FSMContext):
 async def process_region_choice(callback: types.CallbackQuery, state: FSMContext):
     region = callback.data.split(":", 1)[-1]
     await state.update_data(region=region, platform="Region")
-if "Япония" in region:
-    prices = [
-    "578 coins -> 70.000 so'm",
-    "788 coins -> 100.000 so'm",
-    "1092 coins -> 135.000 so'm",
-    "2237 coins -> 250.000 so'm",
-    "2815 coins -> 315.000 so'm",
-    "3413 coins -> 370.000 so'm",
-    "4474 coins -> 500.000 so'm",
-    "5985 coins -> 600.000 so'm",
-    "13440 coins -> 1.250.000 so'm",
-    "32200 coins -> 2.800.000 so'm"
-    "🔥 [AKSIYA] 650 coins (1 marta) -> 50.000 so'm",
-    "🔥 [AKSIYA] 2600 coins (4 marta limit) -> 190.000 so'm"
-    ]
+    if "Япония" in region:
+        prices = [
+            "578 coins -> 70.000 so'm",
+            "788 coins -> 100.000 so'm",
+            "1092 coins -> 135.000 so'm",
+            "2237 coins -> 250.000 so'm",
+            "2815 coins -> 315.000 so'm",
+            "3413 coins -> 370.000 so'm",
+            "4474 coins -> 500.000 so'm",
+            "5985 coins -> 600.000 so'm",
+            "13440 coins -> 1.250.000 so'm",
+            "32200 coins -> 2.800.000 so'm",
+            "🔥 [AKSIYA] 650 coins (1 marta) -> 50.000 so'm",
+            "🔥 [AKSIYA] 2600 coins (4 marta limit) -> 190.000 so'm"
+        ]
+    else:
+        prices = [
+            "578 coins -> 70.000 so'm",
+            "788 coins -> 100.000 so'm",
+            "1092 coins -> 135.000 so'm",
+            "2237 coins -> 250.000 so'm",
+            "2815 coins -> 315.000 so'm",
+            "3413 coins -> 370.000 so'm",
+            "4474 coins -> 500.000 so'm",
+            "5985 coins -> 600.000 so'm",
+            "13440 coins -> 1.250.000 so'm",
+            "32200 coins -> 2.800.000 so'm"
+        ]
+
     builder = InlineKeyboardBuilder()
     for p in prices:
         builder.button(text=p, callback_data=f"reg_p:{p}")
