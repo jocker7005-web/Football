@@ -428,7 +428,7 @@ async def admin_order_reject(callback: types.CallbackQuery):
         save_data(data)
         
         builder = InlineKeyboardBuilder()
-        builder.button(text="👨‍💻 Admin bilan bog'lanish", url="https://t.me")
+        builder.button(text="👨‍💻 Admin bilan bog'lanish", jocker7005")
         
         await bot.send_message(
             chat_id=order["user_id"], 
