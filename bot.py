@@ -51,7 +51,14 @@ def init_user(user_id, username=None):
 def get_next_order_id():
     data = load_data()
     current_id = data.get("last_id", 0)
-    new_id = current_id + 1
+    
+    if current_id == 0 and data.get("orders"):
+        try:
+            current_id = max(int(k) for k in data["orders"].keys())
+        except Exception:
+            current_id = 0
+            
+    new_id = int(current_id) + 1
     data["last_id"] = new_id
     save_data(data)
     return int(new_id)
