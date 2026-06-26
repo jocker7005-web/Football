@@ -367,14 +367,18 @@ async def process_receipt(message: types.Message, state: FSMContext):
     region_nomi = fsm_data.get('region', "O'yin ichidan")
     paket_nomi = fsm_data.get('packet', 'Coins')
     login_parol = fsm_data.get('credentials', 'Kiritilmagan')
-    mijoz_link = f"@{message.from_user.username}" if message.from_user.username else f"[{message.from_user.full_name}](tg://user?id={message.from_user.id})"
+    mijoz_link = f"@{message.from_user.username}" if message.from_user.username else f"Mijoz (ID: {message.from_user.id})"
     
     admin_text = f"🚨 <b>YANGI BUYURTMA #N{order_id}</b>\n\n👤 Mijoz: {mijoz_link} (ID: <code>{message.from_user.id}</code>)\n📱 Platforma: {platforma}\n🌍 Region: {region_nomi}\n📦 Paket: {paket_nomi}\n🔑 Ma'lumotlar: <code>{login_parol}</code>"
+    
     try:
-        await bot.send_photo(chat_id=ADMINS, photo=message.photo[-1].file_id, caption=admin_text, reply_markup=builder.as_markup(), parse_mode="HTML")
-    except Exception:
-        pass
+        # Ro'yxatdagi 1-turgan asosiy adminga rasmli chekni aniq va xatosiz yuboradi
+        await bot.send_photo(chat_id=ADMINS[0], photo=message.photo[-1].file_id, caption=admin_text, reply_markup=builder.as_markup(), parse_mode="HTML")
+    except Exception as e:
+        logging.error(f"Adminga chek yuborishda xato: {e}")
+        
     await state.clear()
+
 # --- ADMIN CALLBACK PROCESS ---
 @dp.callback_query(F.data.startswith("adm_pay_ok:"))
 async def admin_payment_ok(callback: types.CallbackQuery):
