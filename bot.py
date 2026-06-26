@@ -348,6 +348,7 @@ async def process_credentials(message: types.Message, state: FSMContext):
     await message.answer(f"To'lovni amalga oshiring:\n💳 Karta: <code>{KARTA}</code>\n\nChek rasmini shu yerga yuboring.", parse_mode="HTML")
 
 @dp.message(BotStates.sending_receipt, F.photo)
+@dp.message(BotStates.sending_receipt, F.photo)
 async def process_receipt(message: types.Message, state: FSMContext):
     data = load_data()
     order_id = get_next_order_id()
@@ -367,17 +368,26 @@ async def process_receipt(message: types.Message, state: FSMContext):
     region_nomi = fsm_data.get('region', "O'yin ichidan")
     paket_nomi = fsm_data.get('packet', 'Coins')
     login_parol = fsm_data.get('credentials', 'Kiritilmagan')
-    mijoz_link = f"@{message.from_user.username}" if message.from_user.username else f"Mijoz (ID: {message.from_user.id})"
     
-    admin_text = f"🚨 <b>YANGI BUYURTMA #N{order_id}</b>\n\n👤 Mijoz: {mijoz_link} (ID: <code>{message.from_user.id}</code>)\n📱 Platforma: {platforma}\n🌍 Region: {region_nomi}\n📦 Paket: {paket_nomi}\n🔑 Ma'lumotlar: <code>{login_parol}</code>"
+    # Ismdagi maxsus belgilar xato bermasligi uchun HTML formatiga to'g'ri o'tkazildi!
+    if message.from_user.username:
+        mijoz_link = f"@{message.from_user.username}"
+    else:
+        toza_ism = message.from_user.full_name.replace("<", "&lt;").replace(">", "&gt;")
+        mijoz_link = f'<a href="tg://user?id={message.from_user.id}">{toza_ism}</a>'
     
+    admin_text = f"🚨 <b>YANGI BUYURTMA #N{order_id}</b>\n\n" \
+                 f"👤 Mijoz: {mijoz_link} (ID: <code>{message.from_user.id}</code>)\n" \
+                 f"📱 Platforma: {platforma}\n" \
+                 f"🌍 Region: {region_nomi}\n" \
+                 f"📦 Paket: {paket_nomi}\n" \
+                 f"🔑 Ma'lumotlar: <code>{login_parol}</code>"
     try:
-        # Ro'yxatdagi 1-turgan asosiy adminga rasmli chekni aniq va xatosiz yuboradi
-        await bot.send_photo(chat_id=ADMINS[0], photo=message.photo[-1].file_id, caption=admin_text, reply_markup=builder.as_markup(), parse_mode="HTML")
-    except Exception as e:
-        logging.error(f"Adminga chek yuborishda xato: {e}")
-        
+        await bot.send_photo(chat_id=ADMIN_ID, photo=message.photo[-1].file_id, caption=admin_text, reply_markup=builder.as_markup(), parse_mode="HTML")
+    except Exception:
+        pass
     await state.clear()
+
 
 # --- ADMIN CALLBACK PROCESS ---
 @dp.callback_query(F.data.startswith("adm_pay_ok:"))
