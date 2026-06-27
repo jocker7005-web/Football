@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FC & eFootball Donat-Bonus</title>
+    <!-- Telegram Web App va Adsgram kutubxonalarini ulash -->
+    <script src="https://telegram.org"></script>
+    <script src="https://adsgram.ai"></script>
+    
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #0b0e14;
+            color: #ffffff;
+            margin: 0;
+            padding: 15px;
+            text-align: center;
+        }
+        .app-container { max-width: 450px; margin: 0 auto; }
+        .header { margin-top: 10px; margin-bottom: 20px; }
+        .username { color: #00ffcc; font-size: 20px; font-weight: bold; }
+        
+        /* Balans kartasi */
+        .balance-box {
+            background: linear-gradient(135deg, #161b22, #0d1117);
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid #30363d;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        .balance-title { font-size: 14px; color: #8b949e; text-transform: uppercase; letter-spacing: 1px; }
+        .balance-value { font-size: 32px; font-weight: bold; color: #ffcc00; margin-top: 5px; }
+
+        /* Tugmalar */
+        .main-btn {
+            background: linear-gradient(90deg, #1f6feb, #238636);
+            color: #fff;
+            border: none;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 12px;
+            width: 100%;
+            margin-bottom: 12px;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(31,111,235,0.3);
+        }
+        .btn-ad {
+            background: linear-gradient(90deg, #da3633, #f778ba);
+            box-shadow: 0 3px 10px rgba(218,54,51,0.3);
+        }
+        .main-btn:active { transform: scale(0.98); }
+        
+        .footer-text { font-size: 11px; color: #8b949e; margin-top: 30px; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="header">
+        <div class="username" id="user-display">Salom, Geymer!</div>
+    </div>
+
+    <div class="balance-box">
+        <div class="balance-title">Sizning virtual balansingiz</div>
+        <div class="balance-value"><span id="user-points">0</span> BALL</div>
+    </div>
+
+    <!-- Amallar tugmalari -->
+    <button class="main-btn btn-ad" onclick="startRewardAd()">🎁 REKLAMA KO'RIB BONUS OLISH</button>
+    <button class="main-btn" onclick="openShop()">🛒 COIN & POINT DO'KONI</button>
+    <button class="main-btn" style="background: #21262d;" onclick="openProfile()">👤 PROFIL / ID</button>
+
+    <div class="footer-text">Har bir reklama sizga bonus va yangi imkoniyatlar beradi!</div>
+</div>
+
+<!-- Kod mantiqini alohida faylda saqlaymiz -->
+<script src="app.js"></script>
+</body>
+</html>
